@@ -53,12 +53,15 @@ def vacature_html(v):
         f"Bron: {e(v.get('bron'))}",
     ]))
 
-    # Pillen: profiel, hybride, salaris.
-    pillen = [f"<span class='pil profiel'>{e(v.get('profiel'))}</span>"]
-    pillen.append(f"<span class='pil'>{e(hybride_tekst(v.get('hybride')))}</span>")
-    if v.get("salaris_indicatie"):
-        pillen.append(f"<span class='pil'>{e(v.get('salaris_indicatie'))}</span>")
-    pillen_html = "".join(pillen)
+    # Kenmerken met duidelijke labels (niet aan elkaar geplakt).
+    salaris = v.get("salaris_indicatie") or "niet vermeld"
+    kenmerken_html = (
+        "<dl class='kenmerken'>"
+        f"<div><dt>Zoekprofiel:</dt><dd>{e(v.get('profiel'))}</dd></div>"
+        f"<div><dt>Werkvorm:</dt><dd>{e(hybride_tekst(v.get('hybride')))}</dd></div>"
+        f"<div><dt>Salaris:</dt><dd>{e(salaris)}</dd></div>"
+        "</dl>"
+    )
 
     blokken = []
     redenen = v.get("redenen", [])
@@ -83,7 +86,7 @@ def vacature_html(v):
         <span class="label" style="background:{kleur}">{e(label)} &middot; {v.get('score', 0)}</span>
       </div>
       <p class="meta">{meta}</p>
-      <div class="pillen">{pillen_html}</div>
+      {kenmerken_html}
       {''.join(blokken)}
     </article>
     """
@@ -98,19 +101,58 @@ def main():
     with open(scored_pad, "r", encoding="utf-8") as f:
         vacatures = json.load(f)
 
-    # Tel afgewezen vacatures voor een korte vermelding.
+    # Alleen vacatures met score >= 50 worden standaard getoond.
+    DREMPEL = 50
+    top = [v for v in vacatures if v.get("score", 0) >= DREMPEL]
+    laag = [v for v in vacatures if v.get("score", 0) < DREMPEL]
+
+    # Tel afgewezen dealbreakers en opgehaalde (ruwe) vacatures.
     rejected_pad = os.path.join(DATA_DIR, "rejected_jobs.json")
     aantal_afgewezen = 0
     if os.path.exists(rejected_pad):
         with open(rejected_pad, "r", encoding="utf-8") as f:
             aantal_afgewezen = len(json.load(f))
 
+    raw_pad = os.path.join(DATA_DIR, "jobs_raw.json")
+    aantal_opgehaald = 0
+    if os.path.exists(raw_pad):
+        with open(raw_pad, "r", encoding="utf-8") as f:
+            aantal_opgehaald = len(json.load(f))
+
     datum_nu = datetime.date.today().strftime("%d-%m-%Y")
 
-    if vacatures:
-        lijst_html = "".join(vacature_html(v) for v in vacatures)
+    samenvatting_html = (
+        "<div class='samenvatting'>"
+        "<strong>Samenvatting</strong>"
+        "<ul>"
+        f"<li>Opgehaalde vacatures: {aantal_opgehaald}</li>"
+        f"<li>Getoonde topmatches (score &ge; {DREMPEL}): {len(top)}</li>"
+        f"<li>Afgewezen dealbreakers: {aantal_afgewezen}</li>"
+        f"<li>Verborgen lage matches: {len(laag)}</li>"
+        "</ul></div>"
+    )
+
+    if top:
+        top_html = "".join(vacature_html(v) for v in top)
     else:
-        lijst_html = "<p>Geen vacatures gevonden die aan het profiel voldoen.</p>"
+        top_html = "<p>Geen topmatches gevonden. Kijk eventueel bij de lage matches hieronder.</p>"
+
+    if laag:
+        laag_kaarten = "".join(vacature_html(v) for v in laag)
+        laag_html = (
+            "<details class='lage'>"
+            f"<summary>Lage matches / ter controle ({len(laag)})</summary>"
+            f"{laag_kaarten}"
+            "</details>"
+        )
+    else:
+        laag_html = ""
+
+    lijst_html = (
+        f"{samenvatting_html}"
+        f"<h2 class='sectie'>Topmatches</h2>{top_html}"
+        f"{laag_html}"
+    )
 
     pagina = f"""<!DOCTYPE html>
 <html lang="nl">
@@ -133,10 +175,17 @@ def main():
     .label {{ color: #fff; padding: 0.2rem 0.7rem; border-radius: 999px;
       font-size: 0.8rem; white-space: nowrap; font-weight: 600; }}
     .meta {{ color: #666; font-size: 0.9rem; margin: 0.4rem 0 0.6rem; }}
-    .pillen {{ display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.6rem; }}
-    .pil {{ background: #eef1f5; color: #333; border-radius: 6px; padding: 0.15rem 0.55rem;
-      font-size: 0.8rem; }}
-    .pil.profiel {{ background: #dde7f3; color: #0b3c6b; }}
+    .kenmerken {{ margin: 0 0 0.7rem; font-size: 0.9rem; }}
+    .kenmerken div {{ display: flex; gap: 0.4rem; margin: 0.15rem 0; }}
+    .kenmerken dt {{ font-weight: 600; color: #444; min-width: 90px; }}
+    .kenmerken dd {{ margin: 0; color: #222; }}
+    .samenvatting {{ background: #fff; border: 1px solid #e0e0e0; border-radius: 8px;
+      padding: 0.8rem 1.1rem; margin-bottom: 1.2rem; font-size: 0.92rem; }}
+    .samenvatting ul {{ margin: 0.4rem 0 0; padding-left: 1.2rem; }}
+    details.lage {{ margin-top: 1.5rem; }}
+    details.lage > summary {{ cursor: pointer; font-weight: 600; font-size: 1rem;
+      padding: 0.6rem 0; border-top: 1px solid #ddd; }}
+    h2.sectie {{ font-size: 1.1rem; margin: 0.5rem 0 1rem; }}
     .match ul, .waarschuwing ul, .dealbreaker ul {{ margin: 0.3rem 0 0.6rem; padding-left: 1.2rem;
       font-size: 0.9rem; }}
     .match strong, .waarschuwing strong, .dealbreaker strong {{ font-size: 0.9rem; }}
@@ -151,7 +200,6 @@ def main():
     <p class="uitleg">
       Vacatures gematcht tegen Kevins twee zoekprofielen (regio Midden/Oost en
       Amsterdam), gesorteerd op score. Bijgewerkt op {datum_nu}.
-      {len(vacatures)} getoond, {aantal_afgewezen} afgewezen op een dealbreaker.
     </p>
   </header>
   <main>
@@ -171,7 +219,8 @@ def main():
     with open(uitvoer, "w", encoding="utf-8") as f:
         f.write(pagina)
 
-    print(f"[render] Site gebouwd: {uitvoer} ({len(vacatures)} vacatures getoond).")
+    print(f"[render] Site gebouwd: {uitvoer} "
+          f"({len(top)} topmatches, {len(laag)} lage matches, {aantal_afgewezen} afgewezen).")
 
 
 if __name__ == "__main__":

@@ -78,6 +78,67 @@ TECH_TERMEN = ["saas", "scale-up", "scaleup", "tech", "startup", "software", "pl
 FORMEEL_TERMEN = ["zeer formele", "hiërarchische", "hierarchische", "corporate", "pak-en-stropdas"]
 SLECHT_OV_TERMEN = ["bedrijventerrein", "industrieterrein", "slecht bereikbaar", "alleen met auto"]
 
+# Locaties die expliciet buiten Nederland vallen en moeten worden afgewezen.
+# (Let op: "Nederland, TX" is een Amerikaanse plaats; de TX/Texas-tokens vangen die af.)
+BUITENLAND_LOCATIES = [
+    "tx", "texas", "beaumont", "groves", "usa", "u.s.", "united states",
+    "verenigde staten", "canada", "india", "uk", "united kingdom", "spain",
+    "spanje", "germany", "duitsland", "france", "frankrijk", "belgium",
+]
+NL_LOCATIES = ["netherlands", "nederland", "holland"]
+# Compacte lijst NL-steden/provincies om 'wel in Nederland' te herkennen
+# (los van Kevins zoekgebieden). Niet uitputtend; alleen voor de locatieklasse.
+NL_STEDEN = [
+    "rotterdam", "den haag", "the hague", "eindhoven", "groningen", "tilburg",
+    "almere", "breda", "haarlem", "zwolle", "leiden", "maastricht", "delft",
+    "apeldoorn", "enschede", "deventer", "hilversum", "amstelveen", "hoofddorp",
+    "zaandam", "dordrecht", "leeuwarden", "den bosch", "'s-hertogenbosch",
+    "noord-holland", "zuid-holland", "gelderland", "utrecht", "brabant",
+    "noord-brabant", "overijssel", "flevoland", "friesland", "limburg", "drenthe",
+    "zeeland",
+]
+EU_TERMEN = ["europe", "europa", " eu "]
+REMOTE_TERMEN = ["remote", "thuiswerk", "vanuit huis", "op afstand", "anywhere"]
+
+
+def _woord_in(term, *teksten):
+    patroon = r"\b" + re.escape(term.lower()) + r"\b"
+    return any(re.search(patroon, t) for t in teksten)
+
+
+def classificeer_locatie(locatie, tekst, gematchte_locatie):
+    """Bepaal de locatieklasse:
+    'zoekgebied' (Nederlandse stad uit een profiel),
+    'remote_eu' (expliciet remote Nederland/Europa),
+    'nl' (Nederland maar buiten de zoekgebieden),
+    'buiten' (buitenland of niet herleidbaar -> dealbreaker).
+    """
+    loc = (locatie or "").lower()
+
+    # 1. Expliciet buitenland -> afwijzen (vangt ook 'Nederland, TX' via tx/texas).
+    for t in BUITENLAND_LOCATIES:
+        if _woord_in(t, loc) or _woord_in(t, tekst):
+            return "buiten"
+
+    # 2. Stad uit een zoekprofiel.
+    if gematchte_locatie:
+        return "zoekgebied"
+
+    # 3. Expliciet remote in Nederland of Europa.
+    is_remote = any(r in loc for r in REMOTE_TERMEN) or any(r in tekst for r in REMOTE_TERMEN)
+    nl_of_eu = (any(n in loc for n in NL_LOCATIES) or any(n in tekst for n in NL_LOCATIES)
+                or any(eu in loc for eu in EU_TERMEN) or any(eu in tekst for eu in EU_TERMEN))
+    if is_remote and nl_of_eu:
+        return "remote_eu"
+
+    # 4. Nederland, maar buiten de twee zoekgebieden.
+    if (any(n in loc for n in NL_LOCATIES) or _woord_in("nl", loc)
+            or any(_woord_in(s, loc) for s in NL_STEDEN)):
+        return "nl"
+
+    # 5. Niet herleidbaar tot Nederland -> afwijzen.
+    return "buiten"
+
 # Dealbreakers: (lijst triggers, label, straf, hard?)
 DEALBREAKERS = [
     (["callcenter", "call center", "call-center"], "Callcenter", -60, True),
@@ -177,7 +238,15 @@ def score_uitgebreid(vacature, profiel_config):
 
     # --- Profiel + locatie ---
     profiel, gematchte_locatie = kies_profiel(tekst, profielen)
-    profiel_naam = profiel["name"] if profiel else "Geen zoekgebied"
+    loc_klasse = classificeer_locatie(vacature.get("locatie", ""), tekst, gematchte_locatie)
+    if profiel:
+        profiel_naam = profiel["name"]
+    elif loc_klasse == "remote_eu":
+        profiel_naam = "Remote (Nederland/Europa)"
+    elif loc_klasse == "nl":
+        profiel_naam = "Nederland (buiten zoekgebied)"
+    else:
+        profiel_naam = "Buiten zoekgebied"
 
     # --- Stap 1: harde filters ---
     hybride = detecteer_hybride(tekst)
@@ -267,11 +336,19 @@ def score_uitgebreid(vacature, profiel_config):
         redenen.append("Procesoptimalisatie / automatisering / rapportage (+10)")
 
     # --- Stap 4: context ---
-    if gematchte_locatie:
+    if loc_klasse == "zoekgebied":
         score += 15
         redenen.append(f"Locatie past: {gematchte_locatie} (+15)")
-    else:
-        waarschuwingen.append("Locatie buiten de twee zoekgebieden")
+    elif loc_klasse == "remote_eu":
+        redenen.append("Remote in Nederland/Europa")
+    elif loc_klasse == "nl":
+        dealbreakers.append("In Nederland, maar buiten de zoekgebieden (regio Midden/Oost of Amsterdam)")
+        score -= 100
+        hard_dealbreaker = True
+    else:  # buitenland of niet herleidbaar tot Nederland -> dealbreaker
+        dealbreakers.append("Locatie buiten Nederland")
+        score -= 100
+        hard_dealbreaker = True
 
     if _bevat(tekst, TECH_TERMEN):
         score += 10
