@@ -122,6 +122,11 @@ Consultant, Administrator). Functietitels die duidelijk zwaarder/leidinggevend
 zijn — manager, lead, teamleider, hoofd, head of, director, senior, principal,
 chief — worden hard uitgesloten (op basis van de titel, niet de omschrijving).
 
+Opleiding: Kevin heeft GEEN afgerond HBO, maar zit wél op HBO-denkniveau.
+"HBO werk- en denkniveau" is dus prima. Een vacature die expliciet een AFGEROND
+diploma eist krijgt een waarschuwing + strafpunten (geen harde uitsluiting,
+diploma-eisen zijn vaak onderhandelbaar): −15 voor HBO, −25 voor WO/universitair.
+
 ### Gewenste werkzaamheden (extra score)
 
 CRM-/Salesforce-/HubSpot-beheer, procesoptimalisatie, automatiseringen,
@@ -156,6 +161,7 @@ bedrijventerreinen. Hybride werken is een harde eis.
 -100 geen hybride   -100 te senior (manager/lead/hoofd/senior)
 -80 salaris onder 3300   -60 callcenter/telefonie   -60 koude acquisitie
 -50 harde sales targets  -40 alleen administratie
+-25 vereist afgerond WO/universitair   -15 vereist afgerond HBO
 -25 slecht bereikbaar zonder OV   -20 zeer formele cultuur
 ```
 

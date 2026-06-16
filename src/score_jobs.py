@@ -247,6 +247,43 @@ def te_senior(titel):
     return any(_bevat_woord(t, w) for w in SENIOR_WOORD)
 
 
+# Opleidingseis: Kevin heeft GEEN afgerond HBO, maar zit wél op HBO-denkniveau.
+# "HBO werk- en denkniveau" is dus prima; een expliciet vereist AFGEROND diploma
+# is een aandachtspunt (waarschuwing + strafpunten, geen harde uitsluiting).
+# WO/universitair weegt zwaarder dan HBO. De patronen eisen altijd een
+# afgerond/diploma-context, zodat "hbo denkniveau" niet onterecht straft.
+HBO_DIPLOMA_PATRONEN = [
+    r"afgeronde?\s+hbo",
+    r"afgeronde?\s+bachelor",
+    r"voltooide?\s+hbo",
+    r"hbo[-\s]?diploma",
+    r"hbo[-\s]?bachelor",
+    r"hbo\s+gediplomeerd",
+    r"in het bezit van een\s+hbo",
+    r"minimaal\s+(een\s+)?afgeronde?\s+hbo",
+]
+WO_DIPLOMA_PATRONEN = [
+    r"afgeronde?\s+(wo|universitair\w*|academisch\w*|master)",
+    r"voltooide?\s+(wo|universitair\w*|academisch\w*|master)",
+    r"\bwo[-\s]?diploma",
+    r"universitair\w*\s+(diploma|opleiding)",
+    r"academisch\w*\s+(diploma|opleiding)",
+    r"master[-\s]?diploma",
+    r"in het bezit van een\s+(wo|universitair|master)",
+]
+
+
+def diploma_eis(tekst):
+    """Detecteer een expliciet vereist afgerond diploma. Geeft (straf, waarschuwing)."""
+    if any(re.search(p, tekst) for p in WO_DIPLOMA_PATRONEN):
+        return -25, ("Vraagt mogelijk een afgeronde WO/universitaire opleiding "
+                     "(Kevin heeft HBO-denkniveau, geen diploma)")
+    if any(re.search(p, tekst) for p in HBO_DIPLOMA_PATRONEN):
+        return -15, ("Vraagt mogelijk een afgeronde HBO-opleiding "
+                     "(Kevin heeft HBO-denkniveau, geen diploma)")
+    return 0, None
+
+
 def titel_match(titel, titels):
     """Geeft de gematchte titel terug, of None. Case-insensitief, deelmatch."""
     t = titel.lower()
@@ -343,6 +380,11 @@ def score_uitgebreid(vacature, profiel_config):
             redenen.append(f"Salaris boven voorkeursminimum (+5): {salaris_indicatie}")
     else:
         waarschuwingen.append("Salaris niet (duidelijk) vermeld")
+
+    diploma_straf, diploma_waarschuwing = diploma_eis(tekst)
+    if diploma_straf:
+        score += diploma_straf
+        waarschuwingen.append(diploma_waarschuwing)
 
     for triggers, label, straf, hard in DEALBREAKERS:
         if _bevat(tekst, triggers):
