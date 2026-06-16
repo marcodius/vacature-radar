@@ -1,0 +1,19 @@
+# Echte config met persoonlijke gegevens of voorkeuren (niet publiceren)
+config/profile.json
+config/profile.kevin.json
+config/sources.json
+data/manual_links.json
+
+# Gegenereerde tussenbestanden
+data/jobs_raw.json
+data/jobs_scored.json
+data/rejected_jobs.json
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# macOS
+.DS_Store

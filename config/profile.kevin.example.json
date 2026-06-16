@@ -1,0 +1,151 @@
+{
+  "candidate_name": "Kevin Snijder",
+  "currency": "EUR",
+  "salary": {
+    "minimum_monthly_gross_40h": 3300,
+    "preferred_monthly_gross_40h_min": 3500,
+    "preferred_monthly_gross_40h_max": 4500
+  },
+  "global_hard_requirements": {
+    "hybrid_work_required": true,
+    "minimum_salary_required": true
+  },
+  "global_dealbreakers": [
+    "geen hybride werkmogelijkheden",
+    "volledig op kantoor",
+    "hele dag telefonie",
+    "callcenter",
+    "klantenservice callcenter",
+    "koude acquisitie",
+    "cold calling",
+    "leadgeneratie als hoofdtaak",
+    "actief opvolgen van leads als hoofdtaak",
+    "harde sales targets",
+    "new business sales target",
+    "accountmanager met omzetverantwoordelijkheid",
+    "zeer formele organisatie",
+    "hiërarchische organisatie",
+    "functie vrijwel uitsluitend administratie",
+    "administratief medewerker zonder bredere operations rol"
+  ],
+  "positive_work_activities": [
+    "CRM-beheer",
+    "Salesforce-beheer",
+    "HubSpot-beheer",
+    "procesoptimalisatie",
+    "automatiseringen",
+    "projectondersteuning",
+    "operations werkzaamheden",
+    "data-analyse",
+    "rapportages",
+    "klantprocesverbeteringen",
+    "commerciële ondersteuning",
+    "administratieve werkzaamheden als onderdeel van een bredere functie"
+  ],
+  "preferred_environment": [
+    "informele werksfeer",
+    "geen pak-en-stropdas cultuur",
+    "moderne organisatie",
+    "tech",
+    "SaaS",
+    "scale-up",
+    "dienstverlenende omgeving",
+    "resultaatgericht",
+    "pragmatisch",
+    "ruimte voor eigen initiatief",
+    "ruimte voor procesverbetering"
+  ],
+  "profiles": [
+    {
+      "id": "kevin-regio-midden-oost",
+      "name": "Zoekprofiel 1 – Regio Ede, Arnhem, Utrecht, Nijmegen en Amersfoort",
+      "locations": [
+        "Ede",
+        "Arnhem",
+        "Utrecht",
+        "Nijmegen",
+        "Amersfoort",
+        "Veenendaal",
+        "Wageningen"
+      ],
+      "priority_1_titles": [
+        "CRM Specialist",
+        "CRM Operations Specialist",
+        "Business Operations Specialist",
+        "Customer Operations Specialist",
+        "Operations Specialist",
+        "Salesforce Specialist",
+        "Salesforce Administrator",
+        "Revenue Operations Specialist",
+        "RevOps Specialist",
+        "Customer Success Operations Specialist",
+        "Procescoördinator",
+        "Proces Coordinator",
+        "Sales Operations Specialist"
+      ],
+      "priority_2_titles": [
+        "Projectcoördinator",
+        "Project Coordinator",
+        "Implementatie Specialist",
+        "Implementation Specialist",
+        "Customer Experience Specialist",
+        "Membership Manager",
+        "Community Operations Specialist",
+        "Commercieel Medewerker Binnendienst",
+        "Sales Support Specialist",
+        "Account Support Specialist",
+        "Customer Success Specialist",
+        "Business Support Specialist"
+      ],
+      "location_requirements": [
+        "goed bereikbaar vanuit regio Ede, Arnhem, Utrecht, Nijmegen of Amersfoort",
+        "hybride werken mogelijk"
+      ]
+    },
+    {
+      "id": "kevin-amsterdam",
+      "name": "Zoekprofiel 2 – Amsterdam",
+      "locations": [
+        "Amsterdam",
+        "Amsterdam Zuid",
+        "Amsterdam Amstel",
+        "Amsterdam Sloterdijk",
+        "Amsterdam Zuidoost"
+      ],
+      "priority_1_titles": [
+        "CRM Specialist",
+        "CRM Operations Specialist",
+        "Business Operations Specialist",
+        "Customer Operations Specialist",
+        "Operations Specialist",
+        "Salesforce Specialist",
+        "Salesforce Administrator",
+        "Revenue Operations Specialist",
+        "RevOps Specialist",
+        "Customer Success Operations Specialist",
+        "Business Process Specialist",
+        "Sales Operations Specialist"
+      ],
+      "priority_2_titles": [
+        "Projectcoördinator",
+        "Project Coordinator",
+        "Implementatie Specialist",
+        "Implementation Specialist",
+        "Customer Experience Specialist",
+        "Membership Manager",
+        "Community Operations Specialist",
+        "Commercieel Medewerker Binnendienst",
+        "Sales Support Specialist",
+        "Partner Operations Specialist",
+        "Customer Success Specialist",
+        "Business Support Specialist"
+      ],
+      "location_requirements": [
+        "goed bereikbaar met trein en openbaar vervoer",
+        "bij voorkeur nabij een NS-station",
+        "geen slecht bereikbare bedrijventerreinen",
+        "hybride werken is een harde eis"
+      ]
+    }
+  ]
+}

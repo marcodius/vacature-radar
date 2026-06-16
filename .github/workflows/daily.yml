@@ -1,0 +1,64 @@
+name: Dagelijkse vacatures
+
+on:
+  schedule:
+    # Elke dag om 06:00 UTC (ongeveer 07:00/08:00 NL-tijd).
+    - cron: "0 6 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Code ophalen
+        uses: actions/checkout@v4
+
+      - name: Python 3.12 instellen
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Dependencies installeren
+        run: pip install -r requirements.txt
+
+      - name: Vacatures ophalen
+        env:
+          # Vul deze in als GitHub Secrets zodra je echte API-toegang hebt.
+          # Zonder secrets valt de pijplijn terug op mock-data / overgeslagen bronnen.
+          NVB_API_KEY: ${{ secrets.NVB_API_KEY }}
+          CSO_API_KEY: ${{ secrets.CSO_API_KEY }}
+          ADZUNA_APP_ID: ${{ secrets.ADZUNA_APP_ID }}
+          ADZUNA_APP_KEY: ${{ secrets.ADZUNA_APP_KEY }}
+          JOOBLE_API_KEY: ${{ secrets.JOOBLE_API_KEY }}
+        run: python src/fetch_jobs.py
+
+      - name: Vacatures scoren
+        run: python src/score_jobs.py
+
+      - name: Site bouwen
+        run: python src/render_site.py
+
+      - name: Pages-artefact uploaden
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Naar GitHub Pages publiceren
+        id: deployment
+        uses: actions/deploy-pages@v4

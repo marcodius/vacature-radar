@@ -1,0 +1,24 @@
+{
+  "naam": "Mijn profiel",
+  "trefwoorden": [
+    "python",
+    "data",
+    "developer",
+    "backend"
+  ],
+  "locaties": [
+    "Amsterdam",
+    "Utrecht",
+    "Remote",
+    "Thuiswerken"
+  ],
+  "dienstverband": [
+    "fulltime",
+    "parttime"
+  ],
+  "uitsluiten": [
+    "stage",
+    "uitzendkracht"
+  ],
+  "min_score": 1
+}
