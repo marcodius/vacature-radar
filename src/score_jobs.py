@@ -225,6 +225,28 @@ def activiteit_match(activiteit, tekst):
     return False
 
 
+# Senioriteit: Kevin zoekt medior/uitvoerend (Specialist, Medewerker,
+# Coördinator, Consultant). Functies die duidelijk zwaarder/leidinggevend zijn
+# worden hard uitgesloten. We kijken alleen naar de TITEL (niet de omschrijving),
+# zodat "samen met de manager" of "hoofdkantoor" geen valse uitsluiting geeft.
+SENIOR_SUBSTRING = [
+    "senior", "manager", "managing", "hoofd", "director", "directeur",
+    "principal", "chief",
+]
+SENIOR_WOORD = [
+    "lead", "teamlead", "team lead", "teamleider", "teamleader",
+    "head of", "vp", "vice president", "chef",
+]
+
+
+def te_senior(titel):
+    """True als de functietitel duidelijk te zwaar/leidinggevend is voor Kevin."""
+    t = (titel or "").lower()
+    if any(s in t for s in SENIOR_SUBSTRING):
+        return True
+    return any(_bevat_woord(t, w) for w in SENIOR_WOORD)
+
+
 def titel_match(titel, titels):
     """Geeft de gematchte titel terug, of None. Case-insensitief, deelmatch."""
     t = titel.lower()
@@ -291,6 +313,11 @@ def score_uitgebreid(vacature, profiel_config):
         profiel_naam = "Buiten zoekgebied"
 
     # --- Stap 1: harde filters ---
+    if te_senior(titel):
+        dealbreakers.append("Functie lijkt te senior/leidinggevend (manager, lead, hoofd of senior)")
+        score -= 100
+        hard_dealbreaker = True
+
     hybride = detecteer_hybride(tekst)
     if hybride is False:
         dealbreakers.append("Geen hybride werk (volledig op kantoor)")

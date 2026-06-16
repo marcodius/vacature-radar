@@ -117,6 +117,11 @@ callcenter, koude acquisitie, leads opvolgen als hoofdtaak, harde sales targets,
 zeer formele/hiërarchische organisatie, functies die vrijwel uitsluitend
 administratie zijn.
 
+Senioriteit: Kevin zoekt medior/uitvoerend (Specialist, Medewerker, Coördinator,
+Consultant, Administrator). Functietitels die duidelijk zwaarder/leidinggevend
+zijn — manager, lead, teamleider, hoofd, head of, director, senior, principal,
+chief — worden hard uitgesloten (op basis van de titel, niet de omschrijving).
+
 ### Gewenste werkzaamheden (extra score)
 
 CRM-/Salesforce-/HubSpot-beheer, procesoptimalisatie, automatiseringen,
@@ -148,8 +153,9 @@ bedrijventerreinen. Hybride werken is een harde eis.
 +15 locatie past         +15 hybride genoemd       +10 SaaS/tech/scale-up
 +10 CRM/Salesforce/HubSpot   +10 proces/automatisering/rapportage
 +5  salaris boven voorkeursminimum
--100 geen hybride   -80 salaris onder 3300   -60 callcenter/telefonie
--60 koude acquisitie  -50 harde sales targets  -40 alleen administratie
+-100 geen hybride   -100 te senior (manager/lead/hoofd/senior)
+-80 salaris onder 3300   -60 callcenter/telefonie   -60 koude acquisitie
+-50 harde sales targets  -40 alleen administratie
 -25 slecht bereikbaar zonder OV   -20 zeer formele cultuur
 ```
 
