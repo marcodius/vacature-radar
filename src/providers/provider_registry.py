@@ -29,6 +29,7 @@ REGISTRY = {
     # Gratis sitemap-bronnen (robots-conform alternatief voor betaalde scrape)
     "werk_nl_sitemap": sitemap_source,
     "nationale_vacaturebank_sitemap": sitemap_source,
+    "werkenvoornederland_sitemap": sitemap_source,
     # Manual-only bronnen (LinkedIn/Indeed) — beide via manual_links
     "linkedin_manual": manual_links,
     "indeed_manual": manual_links,

@@ -87,6 +87,20 @@
       "stop_on_block": true,
       "_uitleg": "Gratis alternatief voor de Werk.nl Apify-actor: lees vacatures uit de Werk.nl-sitemap. VERIFIEER eerst de juiste sitemap_url en detail_bevat (welke URL's zijn vacaturedetailpagina's) op een machine die werk.nl kan bereiken; zet daarna 'enabled' op true."
     },
+    "werkenvoornederland_sitemap": {
+      "enabled": true,
+      "type": "polite_scrape",
+      "country": "NL",
+      "priority": 2,
+      "naam": "WerkenvoorNederland",
+      "sitemap_url": "https://www.werkenvoornederland.nl/sitemap-vacatures.xml",
+      "detail_bevat": "/vacature",
+      "max_pages": 2,
+      "delay_seconds": 10,
+      "respect_robots_txt": true,
+      "stop_on_block": true,
+      "_uitleg": "Gratis overheidsvacatures (WerkenvoorNederland/WerkenbijdeOverheid) zonder API-sleutel. robots.txt staat dit toe en publiceert sitemap-vacatures.xml expliciet. Hetzelfde aanbod als de betaalde CSO-API, maar via de sitemap. Verifieer 'detail_bevat' als de URL-structuur afwijkt."
+    },
     "nationale_vacaturebank_sitemap": {
       "enabled": false,
       "type": "polite_scrape",

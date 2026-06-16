@@ -93,6 +93,53 @@ class PoliteSession:
             return False
         return rp.can_fetch(USER_AGENT, url)
 
+    def get_bytes(self, url):
+        """Als get(), maar geeft ruwe bytes terug en pakt gzip uit (voor sitemaps).
+
+        Veel sitemaps worden gzip-gecomprimeerd aangeboden (.xml die in feite
+        gzip is). Deze methode detecteert de gzip-magic en pakt uit.
+        """
+        import gzip as _gzip
+
+        cache_pad = _cache_pad(self.bron, url) + ".bin"
+        if os.path.exists(cache_pad) and (time.time() - os.path.getmtime(cache_pad)) < CACHE_GELDIG_SECONDEN:
+            with open(cache_pad, "rb") as f:
+                return f.read()
+
+        if not self._robots_toestaan(url):
+            print(f"[{self.bron}] robots.txt staat {url} niet toe. Overslaan.")
+            return None
+
+        wacht = self.delay - (time.time() - self._laatste_request)
+        if wacht > 0:
+            time.sleep(wacht)
+
+        try:
+            resp = requests.get(url, headers={"User-Agent": USER_AGENT}, timeout=30)
+        except Exception as fout:  # noqa: BLE001
+            print(f"[{self.bron}] Request mislukt: {fout}. Stoppen met deze bron.")
+            raise Geblokkeerd(str(fout))
+        finally:
+            self._laatste_request = time.time()
+
+        if resp.status_code in (403, 429):
+            raise Geblokkeerd(f"HTTP {resp.status_code}")
+        if resp.status_code >= 400:
+            print(f"[{self.bron}] HTTP {resp.status_code} voor {url}. Overslaan.")
+            return None
+
+        inhoud = resp.content
+        if inhoud[:2] == b"\x1f\x8b":  # gzip-magic
+            try:
+                inhoud = _gzip.decompress(inhoud)
+            except Exception:  # noqa: BLE001
+                pass
+
+        os.makedirs(os.path.dirname(cache_pad), exist_ok=True)
+        with open(cache_pad, "wb") as f:
+            f.write(inhoud)
+        return inhoud
+
     def get(self, url):
         """Haal een pagina op. Geeft HTML of None. Werpt Geblokkeerd bij blokkade."""
         cache_pad = _cache_pad(self.bron, url)
@@ -210,13 +257,14 @@ def lees_sitemap_urls(sitemap_url, bron, config, bevat="", max_urls=50):
             continue
         gezien.add(url)
         try:
-            xml = sessie.get(url)
+            ruw = sessie.get_bytes(url)
         except Geblokkeerd as blok:
             print(f"[{bron}] Sitemap geblokkeerd ({blok}). Stoppen.")
             break
         budget -= 1
-        if not xml:
+        if not ruw:
             continue
+        xml = ruw.decode("utf-8", "ignore")
         sub, paginas = _parse_sitemap_locs(xml)
         for p in paginas:
             if (not bevat or bevat in p) and p not in verzameld:

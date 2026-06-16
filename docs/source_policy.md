@@ -71,11 +71,20 @@ vereisen een account, API-token en credits (kosten). Dat botst met het
 uitgangspunt "geen betaalde diensten in versie 1" en wordt daarom niet gebruikt.
 
 Sitemap-bronnen leveren titel + locatie + link, maar geen salaris/bedrijf/
-volledige tekst (dat zou per vacature een detailpagina-fetch vereisen). Voor
-Werk.nl en Nationale Vacaturebank staan sitemap-bronnen klaar in
-`config/sources.example.json` (`werk_nl_sitemap`, `nationale_vacaturebank_sitemap`),
-standaard uit: verifieer eerst de juiste `sitemap_url` en `detail_bevat` op een
-machine die de site kan bereiken, en respecteer de actuele robots.txt.
+volledige tekst (dat zou per vacature een detailpagina-fetch vereisen).
+
+**Overheidsvacatures gratis via WerkenvoorNederland.** De open dataset
+"Vacatures Overheid" op data.overheid.nl verwijst alleen naar de CSO-API
+(`docs.api.cso20.net`), die een sleutel vereist. Hetzelfde aanbod
+(WerkenvoorNederland / WerkenbijdeOverheid) is gratis te halen via de sitemap:
+`werkenvoornederland.nl/robots.txt` staat crawlen toe (alleen `/login` verboden)
+en publiceert expliciet `sitemap-vacatures.xml`. Daarom is `werkenvoornederland_sitemap`
+aan; de sleutel-gebaseerde `vacatures_overheid` (CSO-API) is optioneel voor
+rijkere data.
+
+`werk_nl_sitemap` en `nationale_vacaturebank_sitemap` staan klaar maar uit:
+verifieer eerst de juiste `sitemap_url` en `detail_bevat` op een machine die de
+site kan bereiken, en respecteer de actuele robots.txt.
 
 ## LinkedIn en Indeed — alleen handmatig
 
