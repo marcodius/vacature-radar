@@ -83,31 +83,35 @@ def datum_label(d, vandaag):
 # Dedup op inhoud
 # --------------------------------------------------------------------------
 
-def dedup_inhoud(vacatures):
-    """Voeg bijna-duplicaten samen op (titel, bedrijf, locatie).
+def _norm(s):
+    return " ".join((s or "").strip().lower().split())
 
-    Aggregators bieden dezelfde vacature onder verschillende URL's aan. We
-    dedupliceren alleen wanneer het bedrijf bekend is (anders zou alles met
-    'Onbekend bedrijf' onterecht samenvallen). Bij een botsing houden we de
-    vacature met de hoogste score.
+
+def dedup_inhoud(vacatures):
+    """Voeg duplicaten samen, ook over bronnen en steden heen.
+
+    Aggregators bieden dezelfde vacature onder meerdere URL's, steden en bronnen
+    aan. Twee gevallen:
+    - Bekend bedrijf: dedup op (titel, bedrijf), locatie genegeerd. Zo vallen
+      'rol X bij bedrijf Y' in meerdere steden samen tot één kaart.
+    - Onbekend bedrijf: dedup op (titel, locatie) — voorzichtiger, want we kunnen
+      losse werkgevers niet uit elkaar houden.
+    Bij een botsing houden we de vacature met de hoogste score (en dus meestal
+    de versie in een zoekgebied).
     """
-    beste, volgorde, passthrough = {}, [], []
+    beste, volgorde = {}, []
     for v in vacatures:
-        bedrijf = (v.get("bedrijf") or "").strip().lower()
-        if bedrijf in GENERIEK_BEDRIJF:
-            passthrough.append(v)
-            continue
-        sleutel = (
-            (v.get("titel") or "").strip().lower(),
-            bedrijf,
-            (v.get("locatie") or "").strip().lower(),
-        )
+        bedrijf = _norm(v.get("bedrijf"))
+        if bedrijf and bedrijf not in GENERIEK_BEDRIJF:
+            sleutel = ("b", _norm(v.get("titel")), bedrijf)
+        else:
+            sleutel = ("t", _norm(v.get("titel")), _norm(v.get("locatie")))
         if sleutel not in beste:
             beste[sleutel] = v
             volgorde.append(sleutel)
         elif v.get("score", 0) > beste[sleutel].get("score", 0):
             beste[sleutel] = v
-    return [beste[s] for s in volgorde] + passthrough
+    return [beste[s] for s in volgorde]
 
 
 # --------------------------------------------------------------------------
