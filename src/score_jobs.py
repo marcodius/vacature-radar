@@ -92,6 +92,11 @@ def _bevat(tekst, termen):
     return [t for t in termen if t in tekst]
 
 
+def _bevat_woord(tekst, term):
+    """Match een term op woordgrenzen, zodat 'Ede' niet matcht in 'bredere'."""
+    return re.search(r"\b" + re.escape(term.lower()) + r"\b", tekst) is not None
+
+
 def detecteer_hybride(tekst):
     """Geeft True (hybride), False (expliciet geen) of None (niet vermeld)."""
     if _bevat(tekst, HYBRIDE_GEEN):
@@ -143,7 +148,7 @@ def kies_profiel(tekst, profielen):
     """Wijs het zoekprofiel toe op basis van locatie. Geeft (profiel, gematchte_locatie)."""
     for profiel in profielen:
         for locatie in profiel.get("locations", []):
-            if locatie.lower() in tekst:
+            if _bevat_woord(tekst, locatie):
                 return profiel, locatie
     return None, None
 
@@ -189,7 +194,8 @@ def score_uitgebreid(vacature, profiel_config):
     salaris_maand = extraheer_maandsalaris(vacature.get("omschrijving", ""))
     salaris_indicatie = None
     if salaris_maand is not None:
-        salaris_indicatie = f"± € {salaris_maand:,} bruto p/m (40u, geschat)".replace(",", ".")
+        bedrag = f"{salaris_maand:,}".replace(",", ".")
+        salaris_indicatie = f"± € {bedrag} bruto p/m (40u, geschat)"
         if salaris_maand < min_salaris:
             dealbreakers.append(f"Salaris onder € {min_salaris} ({salaris_indicatie})")
             score -= 80
