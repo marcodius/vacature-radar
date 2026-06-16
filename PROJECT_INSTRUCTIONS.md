@@ -21,7 +21,7 @@ statische GitHub Pages-site om te delen.
 ```
 src/providers/
   api/        nationale_vacaturebank, vacatures_overheid, jooble, adzuna
-  scrape/     randstad, jobbird, werk_nl, youngcapital, sitemap_source (+ _polite)
+  scrape/     randstad, jobbird, werk_nl, youngcapital, linkedin, indeed, sitemap_source (+ _polite)
   manual/     manual_links (LinkedIn + Indeed, handmatig)
   provider_registry.py        koppelt bronsleutel -> provider
 src/fetch_jobs.py             stap 1: ophalen  -> data/jobs_raw.json
@@ -37,6 +37,11 @@ Elke provider biedt `fetch(config) -> list[dict]` met velden `titel`, `bedrijf`,
 (`api`/`polite_scrape`/`manual`) en `priority`. Een bron toevoegen = één regel in
 `provider_registry.py` plus een configblok.
 
+Scrape-bronnen kunnen breed zoeken met `queries`, `locations`, `max_pages`,
+`max_fetch_pages` en `max_resultaten`. Sitemap-bronnen kunnen met
+`fetch_details` en `max_detail_pages` de eerste detailpagina's verrijken met
+JSON-LD/OpenGraph-data.
+
 ## Bronbeleid (zie docs/source_policy.md)
 
 API-bronnen (gratis, sleutel via environment variables / GitHub Secrets; zonder
@@ -44,24 +49,26 @@ sleutel netjes overgeslagen):
 - Nationale Vacaturebank (`NVB_API_KEY`), Vacatures Overheid (`CSO_API_KEY`),
   Jooble NL (`JOOBLE_API_KEY`), Adzuna NL (`ADZUNA_APP_ID` + `ADZUNA_APP_KEY`).
 
-Gratis scrape-/sitemap-bronnen (volgen polite-regels):
-- Randstad (statische scrape, robots staat toe).
-- Jobbird, Werk.nl, Nationale Vacaturebank via hun officiele **sitemap**
-  (`sitemap_source`) — het gratis alternatief voor betaalde actors.
-- YoungCapital: uit (robots verbiedt de relevante pagina's).
-
-Manual-only: LinkedIn en Indeed. Nooit scrapen, geen requests naar die platforms;
-alleen via `data/manual_links.json` (`source`: `linkedin_manual`/`indeed_manual`).
+Gratis scrape-/sitemap-bronnen:
+- Randstad, Jobbird, Werk.nl, YoungCapital en Nationale Vacaturebank mogen via
+  HTML-scrape, sitemap of RSS worden opgehaald.
+- LinkedIn en Indeed mogen ook als bron worden meegenomen wanneer de vacaturedata
+  publiek zichtbaar is; handmatige import via `data/manual_links.json` blijft een
+  fallback-route (`source`: `linkedin_manual`/`indeed_manual`).
+- Nieuwe vacaturesites kunnen worden toegevoegd via `generic_search`,
+  `sitemap_source`, RSS of een eigen provider.
 
 Monsterboard is verwijderd (Monster Nederland failliet).
 
-### Polite-scrape regels (afgedwongen in scrape/_polite.py)
+### Scrape-regels (afgedwongen/configureerbaar in scrape/_polite.py)
 
-- Alleen publieke zoek-/detailpagina's of de officiele sitemap.
-- Respecteer robots.txt; stop bij 403/429/CAPTCHA/login-wall.
-- Max 1 dagelijkse run, max 2 pagina's per bron, min. 10s delay, caching.
-- Geen proxies, IP-rotatie, CAPTCHA-bypass, stealth/fingerprinting,
-  browser-automation om detectie te ontwijken, of scraping achter login.
+- Scraping is toegestaan voor publiek toegankelijke zoek-/detailpagina's,
+  sitemaps en RSS-feeds.
+- Per bron configureerbaar: `enabled`, `max_pages`, `delay_seconds`,
+  `respect_robots_txt` en `stop_on_block`.
+- Start klein met `max_pages`, verhoog dit wanneer de bron betrouwbaar parsed.
+- Gebruik caching om dubbele requests te beperken.
+- Geen API-sleutels, cookies, sessietokens of persoonlijke gegevens in code.
 - Duidelijke user-agent met projectnaam.
 
 ## Beveiliging en privacy
@@ -99,16 +106,16 @@ indicatie, locatie en bron.
 
 ## Werkwijze bij wijzigingen
 
-- Onderzoek eerst de bron (robots.txt, API-docs) voordat je een bron aanzet.
-- Begin klein, zet nieuwe scrape-/sitemap-bronnen standaard uit en verifieer ze
-  één voor één live.
-- Maak alleen noodzakelijke wijzigingen; voeg geen risicovolle scraping of
-  betaalde diensten toe.
+- Onderzoek eerst de bronstructuur (API, sitemap, RSS, HTML-selectors) voordat je een bron aanzet.
+- Begin klein, zet nieuwe scrape-/sitemap-bronnen eerst gecontroleerd aan en verifieer ze één voor één live.
+- Maak alleen noodzakelijke wijzigingen; betaalde diensten blijven buiten versie 1.
 
 ## Lokaal draaien
 
 ```bash
-pip install -r requirements.txt
+/Library/Frameworks/Python.framework/Versions/3.13/bin/python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
 cp config/sources.example.json config/sources.json
 cp config/profile.kevin.example.json config/profile.kevin.json
 python src/fetch_jobs.py && python src/score_jobs.py && python src/render_site.py

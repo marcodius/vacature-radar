@@ -6,13 +6,22 @@ onafhankelijk en voeg je een bron toe door hier één regel toe te voegen.
 
 Drie typen bronnen:
 - "api"            : officiele API's (sleutel via environment variables).
-- "polite_scrape"  : nette, beperkte scrapers (zie docs/source_policy.md).
-- "manual"         : handmatige import (LinkedIn, Indeed) — nooit scrapen.
+- "polite_scrape"  : configureerbare scrapers (zie docs/source_policy.md).
+- "manual"         : handmatige fallback-import (bijv. LinkedIn, Indeed).
 """
 
 from providers.api import adzuna, jooble, nationale_vacaturebank, vacatures_overheid
 from providers.manual import manual_links
-from providers.scrape import jobbird, randstad, sitemap_source, werk_nl, youngcapital
+from providers.scrape import (
+    generic_search,
+    indeed,
+    jobbird,
+    linkedin,
+    randstad,
+    sitemap_source,
+    werk_nl,
+    youngcapital,
+)
 
 # bronsleutel -> module met fetch(config)
 REGISTRY = {
@@ -21,16 +30,24 @@ REGISTRY = {
     "vacatures_overheid": vacatures_overheid,
     "jooble": jooble,
     "adzuna": adzuna,
-    # Polite scrape-bronnen
+    # Scrape-bronnen
     "werk_nl": werk_nl,
     "jobbird": jobbird,
     "randstad": randstad,
     "youngcapital": youngcapital,
-    # Gratis sitemap-bronnen (robots-conform alternatief voor betaalde scrape)
+    "linkedin": linkedin,
+    "indeed": indeed,
+    "generic_search": generic_search,
+    # Gratis sitemap-bronnen
     "werk_nl_sitemap": sitemap_source,
     "nationale_vacaturebank_sitemap": sitemap_source,
     "werkenvoornederland_sitemap": sitemap_source,
-    # Manual-only bronnen (LinkedIn/Indeed) — beide via manual_links
+    "intermediair": generic_search,
+    "talent": generic_search,
+    "jobrapido": generic_search,
+    "simplyhired": generic_search,
+    "joblift": generic_search,
+    # Handmatige fallback-bronnen (LinkedIn/Indeed) — beide via manual_links
     "linkedin_manual": manual_links,
     "indeed_manual": manual_links,
 }

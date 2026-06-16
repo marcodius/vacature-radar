@@ -22,7 +22,7 @@ src/
     nationale_vacaturebank.py   # primaire bron (mock-fallback, echte API via NVB_API_KEY)
     adzuna.py                   # extra bron, standaard uit (ADZUNA_APP_ID/KEY)
     arbeitnow.py                # extra bron, standaard uit (gratis, geen sleutel)
-    manual_links.py             # handmatige links uit data/manual_links.json (bijv. LinkedIn)
+    manual_links.py             # handmatige fallback-links uit data/manual_links.json
   fetch_jobs.py                 # stap 1: ophalen -> data/jobs_raw.json
   score_jobs.py                 # stap 2: scoren  -> data/jobs_scored.json
   render_site.py                # stap 3: site    -> public/index.html
@@ -43,7 +43,7 @@ Bronnen zijn aan/uit te zetten via `config/sources.json` (`"aan": true/false`).
 
 ## Belangrijke regels
 
-- Geen LinkedIn-scraping. LinkedIn alleen via handmatige links.
+- Scraping is toegestaan voor publiek toegankelijke vacaturepagina's, inclusief LinkedIn/Indeed wanneer daarvoor een provider is ingericht.
 - Geen API-sleutels in code. Alleen via environment variables / GitHub Secrets.
 - Geen persoonlijke gegevens publiceren (profiel en bronnen staan in `.gitignore`).
 - Site in eenvoudig Nederlands, geen JavaScript-framework.
@@ -59,7 +59,9 @@ de minimale versie werkt.
 ## Lokaal draaien
 
 ```bash
-pip install -r requirements.txt
+/Library/Frameworks/Python.framework/Versions/3.13/bin/python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
 python src/fetch_jobs.py
 python src/score_jobs.py
 python src/render_site.py

@@ -1,8 +1,9 @@
-"""Manual-only provider voor LinkedIn en Indeed.
+"""Handmatige fallback-provider voor LinkedIn, Indeed en vergelijkbare bronnen.
 
-LinkedIn en Indeed worden NOOIT automatisch opgehaald of gescrapet. Er gaan geen
-requests naar linkedin.com of indeed.com. Vacatures van deze platforms komen
-uitsluitend binnen via handmatig toegevoegde links in data/manual_links.json.
+Automatische scraping kan per platform via een eigen provider worden ingericht.
+Deze provider blijft beschikbaar voor vacatures die handmatig zijn toegevoegd in
+data/manual_links.json, bijvoorbeeld zolang een automatische scraper nog niet
+bestaat of wanneer een losse vacature snel moet worden meegenomen.
 
 Elke regel in dat bestand heeft een 'source' ("linkedin_manual" of
 "indeed_manual"). Deze provider leest het bestand, filtert op de gevraagde

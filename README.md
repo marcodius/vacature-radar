@@ -10,16 +10,18 @@ Versie 1 is bewust simpel: geen database, geen backend, geen betaalde diensten.
 
 De pijplijn bestaat uit drie stappen die je los kunt draaien:
 
-1. `python src/fetch_jobs.py` — haalt vacatures op uit de ingeschakelde bronnen
+1. `python3 src/fetch_jobs.py` — haalt vacatures op uit de ingeschakelde bronnen
    en slaat ze op in `data/jobs_raw.json`.
-2. `python src/score_jobs.py` — scoort elke vacature op basis van je profiel en
+2. `python3 src/score_jobs.py` — scoort elke vacature op basis van je profiel en
    slaat het gesorteerde resultaat op in `data/jobs_scored.json`.
-3. `python src/render_site.py` — bouwt de website in `public/index.html`.
+3. `python3 src/render_site.py` — bouwt de website in `public/index.html`.
 
 ## Lokaal draaien
 
 ```bash
-pip install -r requirements.txt
+/Library/Frameworks/Python.framework/Versions/3.13/bin/python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
 
 # Kopieer de voorbeeld-config naar echte config (eenmalig)
 cp config/profile.example.json config/profile.json
@@ -41,8 +43,8 @@ Open daarna `public/index.html` in je browser.
 ```
 src/providers/
   api/        nationale_vacaturebank, vacatures_overheid, jooble, adzuna
-  scrape/     werk_nl, jobbird, randstad, youngcapital (+ _polite helper)
-  manual/     manual_links (LinkedIn + Indeed, handmatig)
+  scrape/     werk_nl, jobbird, randstad, youngcapital, linkedin, indeed (+ _polite helper)
+  manual/     manual_links (fallback voor handmatige vacaturelinks)
   provider_registry.py   koppelt bronsleutel -> provider
 src/fetch_jobs.py / score_jobs.py / render_site.py
 config/   sources.example.json, profile(.kevin).example.json
@@ -60,6 +62,16 @@ Bronnen staan in `config/sources.json` onder `"sources"`. Per bron: `enabled`
 (ophaalvolgorde). Het volledige bronbeleid staat in
 [`docs/source_policy.md`](docs/source_policy.md).
 
+Scrape-bronnen ondersteunen bredere dekking via:
+
+- `queries`: meerdere zoektermen per bron.
+- `locations`: meerdere locaties per bron.
+- `max_pages`: aantal pagina's per query/locatie-combinatie.
+- `max_fetch_pages`: harde bovengrens op het totaal aantal zoekpagina's per bron.
+- `max_resultaten`: bovengrens op opgeslagen vacatures per bron.
+- `fetch_details` + `max_detail_pages`: verrijk sitemap-resultaten met velden uit
+  vacaturedetailpagina's.
+
 **API-bronnen** (sleutels via environment variables / GitHub Secrets; zonder
 sleutel wordt de bron netjes overgeslagen):
 
@@ -68,17 +80,20 @@ sleutel wordt de bron netjes overgeslagen):
 - **Jooble NL** — `JOOBLE_API_KEY`.
 - **Adzuna NL** — `ADZUNA_APP_ID` + `ADZUNA_APP_KEY` (https://developer.adzuna.com/).
 
-**Polite scrape-bronnen** (standaard uit; volgen de regels in
-`docs/source_policy.md`: robots.txt, max 2 pagina's, 10s delay, caching, stop bij
-blokkade, geen stealth/login):
+**Scrape-bronnen** (configureerbaar per bron; zie `docs/source_policy.md`):
 
 - **Werk.nl**, **Jobbird** (via `jobbird.com/nl/vacature/`), **Randstad**,
-  **YoungCapital**.
+  **YoungCapital**, **LinkedIn**, **Indeed**, **Intermediair**, **Talent.com**,
+  **Jobrapido**, **SimplyHired**, **Joblift** en andere sites met publiek
+  toegankelijke vacaturepagina's.
+- Sitemaps en RSS-feeds zijn ook geldige scrape-routes wanneer die meer stabiele
+  data leveren dan zoekpagina's.
 
-**Manual-only bronnen** (nooit scrapen; geen requests naar deze platforms):
+**Handmatige bronnen** (fallback wanneer automatisch ophalen nog niet is
+ingericht):
 
-- **LinkedIn** en **Indeed** — voeg vacatures handmatig toe in
-  `data/manual_links.json` met `source` `linkedin_manual` of `indeed_manual`.
+- Voeg vacatures toe in `data/manual_links.json`, bijvoorbeeld met `source`
+  `linkedin_manual` of `indeed_manual`.
 
 > Monsterboard is verwijderd: Monster Nederland is failliet en geen bruikbare
 > bron meer.

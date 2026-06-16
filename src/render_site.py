@@ -8,7 +8,7 @@ dealbreaker-indicatie, salaris- en hybride-indicatie, locatie en bron.
 Vacatures met een harde dealbreaker staan niet in jobs_scored.json (die zitten
 in data/rejected_jobs.json) en worden dus niet getoond.
 
-Gebruik:  python src/render_site.py
+Gebruik:  python3 src/render_site.py
 """
 
 import datetime

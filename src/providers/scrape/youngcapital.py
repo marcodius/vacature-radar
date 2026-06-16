@@ -11,16 +11,9 @@ ZOEK_URL = "https://www.youngcapital.nl/vacatures"
 
 
 def _page_urls(config):
-    zoek = config.get("base_url", ZOEK_URL)
-    query = config.get("query", "")
-    urls = []
-    for p in range(1, min(int(config.get("max_pages", 2)), 2) + 1):
-        params = []
-        if query:
-            params.append(f"q={query}")
-        params.append(f"page={p}")
-        urls.append(zoek + "?" + "&".join(params))
-    return urls
+    return _polite.bouw_zoek_urls(
+        config.get("base_url", ZOEK_URL), config, "q", page_param="page", page_start=1
+    )
 
 
 def fetch(config):
@@ -28,5 +21,6 @@ def fetch(config):
     resultaat = []
     for html in htmls:
         resultaat.extend(_polite.extraheer_vacatures(html, "/vacature", BASIS, NAAM))
+    resultaat = _polite.unieke_vacatures(resultaat)
     print(f"[YoungCapital] {len(resultaat)} vacatures uit {len(htmls)} pagina('s).")
     return resultaat[: config.get("max_resultaten", 100)]

@@ -18,7 +18,7 @@ Vacatures met een harde dealbreaker (of negatieve score) gaan naar
 data/rejected_jobs.json en worden niet op de publieke site getoond.
 Goede matches gaan naar data/jobs_scored.json.
 
-Gebruik:  python src/score_jobs.py
+Gebruik:  python3 src/score_jobs.py
 """
 
 import json

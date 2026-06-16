@@ -1,23 +1,25 @@
 """Gedeelde hulpmiddelen voor nette ('polite') scrapers.
 
-Afspraken die hier worden afgedwongen (zie ook docs/source_policy.md):
-- Respecteer robots.txt.
+Afspraken die hier worden afgedwongen of per bron configureerbaar zijn
+(zie ook docs/source_policy.md):
+- Scraping is toegestaan voor publiek toegankelijke vacaturepagina's.
 - Maximaal N zoekresultaatpagina's per bron (config 'max_pages', standaard 2).
 - Minimaal 10 seconden delay tussen requests (config 'delay_seconds').
 - Caching van opgehaalde pagina's (data/cache/<bron>/), standaard ~20 uur geldig.
-- Stop bij 403, 429, CAPTCHA, login-wall of andere blokkade.
-- Geen proxies, geen IP-rotatie, geen CAPTCHA-bypass, geen stealth/fingerprinting,
-  geen browser-automation, geen scraping achter login.
+- Robots-check is configureerbaar met 'respect_robots_txt'.
+- Stopgedrag bij 403, 429, CAPTCHA, login-wall of andere blokkade is
+  configureerbaar met 'stop_on_block'.
 - Duidelijke user-agent met projectnaam.
 
-De scrapers gebruiken alleen publieke zoek- en detailpagina's.
+De scrapers gebruiken publieke zoek-, sitemap- en detailpagina's.
 """
 
 import hashlib
+import json
 import os
 import time
 import urllib.robotparser
-from urllib.parse import urlparse
+from urllib.parse import urlencode, urljoin, urlparse
 
 import requests
 
@@ -30,6 +32,11 @@ USER_AGENT = (
     "vacature-radar/1.0 (+https://github.com/marcodius/vacature-radar; "
     "persoonlijk vacature-zoekproject)"
 )
+DEFAULT_HEADERS = {
+    "User-Agent": USER_AGENT,
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "nl-NL,nl;q=0.9,en-US;q=0.8,en;q=0.7",
+}
 CACHE_GELDIG_SECONDEN = 20 * 3600
 
 
@@ -67,9 +74,13 @@ class PoliteSession:
 
     def __init__(self, bron, config):
         self.bron = bron
-        self.delay = max(10, int(config.get("delay_seconds", 10)))
-        self.respect_robots = config.get("respect_robots_txt", True)
+        self.delay = max(0, float(config.get("delay_seconds", 10)))
+        self.respect_robots = config.get("respect_robots_txt", False)
         self.stop_on_block = config.get("stop_on_block", True)
+        self.detect_block_html = config.get("detect_block_html", True)
+        self.headers = {**DEFAULT_HEADERS, **config.get("headers", {})}
+        if config.get("user_agent"):
+            self.headers["User-Agent"] = config["user_agent"]
         self._laatste_request = 0.0
         self._robots_cache = {}
 
@@ -91,7 +102,7 @@ class PoliteSession:
             self._robots_cache[basis] = rp
         if rp is False:
             return False
-        return rp.can_fetch(USER_AGENT, url)
+        return rp.can_fetch(self.headers.get("User-Agent", USER_AGENT), url)
 
     def get_bytes(self, url):
         """Als get(), maar geeft ruwe bytes terug en pakt gzip uit (voor sitemaps).
@@ -115,7 +126,7 @@ class PoliteSession:
             time.sleep(wacht)
 
         try:
-            resp = requests.get(url, headers={"User-Agent": USER_AGENT}, timeout=30)
+            resp = requests.get(url, headers=self.headers, timeout=30)
         except Exception as fout:  # noqa: BLE001
             print(f"[{self.bron}] Request mislukt: {fout}. Stoppen met deze bron.")
             raise Geblokkeerd(str(fout))
@@ -123,6 +134,8 @@ class PoliteSession:
             self._laatste_request = time.time()
 
         if resp.status_code in (403, 429):
+            if resp.headers.get("cf-mitigated") == "challenge":
+                raise Geblokkeerd(f"Cloudflare challenge (HTTP {resp.status_code})")
             raise Geblokkeerd(f"HTTP {resp.status_code}")
         if resp.status_code >= 400:
             print(f"[{self.bron}] HTTP {resp.status_code} voor {url}. Overslaan.")
@@ -157,7 +170,7 @@ class PoliteSession:
             time.sleep(wacht)
 
         try:
-            resp = requests.get(url, headers={"User-Agent": USER_AGENT}, timeout=30)
+            resp = requests.get(url, headers=self.headers, timeout=30)
         except Exception as fout:  # noqa: BLE001
             print(f"[{self.bron}] Request mislukt: {fout}. Stoppen met deze bron.")
             raise Geblokkeerd(str(fout))
@@ -165,11 +178,13 @@ class PoliteSession:
             self._laatste_request = time.time()
 
         if resp.status_code in (403, 429):
+            if resp.headers.get("cf-mitigated") == "challenge":
+                raise Geblokkeerd(f"Cloudflare challenge (HTTP {resp.status_code})")
             raise Geblokkeerd(f"HTTP {resp.status_code}")
         if resp.status_code >= 400:
             print(f"[{self.bron}] HTTP {resp.status_code} voor {url}. Overslaan.")
             return None
-        if _blokkade_in_html(resp.text):
+        if self.detect_block_html and _blokkade_in_html(resp.text):
             raise Geblokkeerd("CAPTCHA/login-wall gedetecteerd")
 
         _schrijf_cache(cache_pad, resp.text)
@@ -221,6 +236,150 @@ def extraheer_vacatures(html, detail_bevat, basis_url, bron, detail_regex=None):
     return resultaat
 
 
+def lijst_config(config, enkelvoud, meervoud, standaard=""):
+    """Geef een schone lijst terug voor config met enkelvoudige of meervoudige waarde."""
+    waarde = config.get(meervoud)
+    if waarde is None:
+        waarde = config.get(enkelvoud, standaard)
+    if isinstance(waarde, list):
+        items = waarde
+    else:
+        items = [waarde]
+    return [str(i).strip() for i in items if str(i).strip()]
+
+
+def unieke_vacatures(vacatures):
+    """Dedupliceer vacatures op URL en behoud de eerste variant."""
+    gezien, resultaat = set(), []
+    for vacature in vacatures:
+        url = vacature.get("url")
+        sleutel = url or (
+            vacature.get("titel", "").lower(),
+            vacature.get("bedrijf", "").lower(),
+            vacature.get("locatie", "").lower(),
+        )
+        if sleutel in gezien:
+            continue
+        gezien.add(sleutel)
+        resultaat.append(vacature)
+    return resultaat
+
+
+def bouw_zoek_urls(base_url, config, query_param, location_param=None,
+                  page_param="page", page_start=1, page_step=1, extra_params=None):
+    """Bouw zoek-URL's voor alle query/location/page-combinaties."""
+    queries = lijst_config(config, "query", "queries", "")
+    if location_param:
+        locaties = lijst_config(config, "location", "locations", config.get("locatie", ""))
+    else:
+        locaties = [""]
+    if not queries:
+        queries = [""]
+    if not locaties:
+        locaties = [""]
+    max_pages = int(config.get("max_pages", 2))
+    urls = []
+    for query in queries:
+        for locatie in locaties:
+            for idx in range(max_pages):
+                params = dict(extra_params or {})
+                if query and query_param:
+                    params[query_param] = query
+                if locatie and location_param:
+                    params[location_param] = locatie
+                if page_param:
+                    params[page_param] = page_start + (idx * page_step)
+                urls.append(base_url + "?" + urlencode(params))
+    return urls
+
+
+def _eerste_tekst(*waarden):
+    for waarde in waarden:
+        if isinstance(waarde, str) and waarde.strip():
+            return " ".join(waarde.strip().split())
+    return ""
+
+
+def _jsonld_items(data):
+    if isinstance(data, list):
+        for item in data:
+            yield from _jsonld_items(item)
+    elif isinstance(data, dict):
+        if "@graph" in data:
+            yield from _jsonld_items(data["@graph"])
+        yield data
+
+
+def extraheer_detail_velden(html):
+    """Haal best-effort vacaturevelden uit JSON-LD, OpenGraph en meta-tags."""
+    try:
+        from bs4 import BeautifulSoup
+    except ImportError:
+        return {}
+
+    soup = BeautifulSoup(html, "html.parser")
+    velden = {}
+
+    for script in soup.find_all("script", type="application/ld+json"):
+        try:
+            data = json.loads(script.string or "")
+        except Exception:  # noqa: BLE001
+            continue
+        for obj in _jsonld_items(data):
+            if not isinstance(obj, dict):
+                continue
+            if "JobPosting" not in str(obj.get("@type", "")):
+                continue
+            velden["titel"] = _eerste_tekst(obj.get("title"), velden.get("titel", ""))
+            org = obj.get("hiringOrganization") or {}
+            if isinstance(org, dict):
+                velden["bedrijf"] = _eerste_tekst(org.get("name"), velden.get("bedrijf", ""))
+            loc = obj.get("jobLocation") or {}
+            if isinstance(loc, list):
+                loc = loc[0] if loc else {}
+            adres = loc.get("address") if isinstance(loc, dict) else {}
+            if isinstance(adres, dict):
+                velden["locatie"] = _eerste_tekst(
+                    adres.get("addressLocality"),
+                    adres.get("addressRegion"),
+                    velden.get("locatie", ""),
+                )
+            beschrijving = obj.get("description")
+            if beschrijving:
+                velden["omschrijving"] = _eerste_tekst(beschrijving, velden.get("omschrijving", ""))
+            velden["datum"] = _eerste_tekst(obj.get("datePosted"), velden.get("datum", ""))
+
+    og_titel = soup.find("meta", property="og:title")
+    if og_titel and og_titel.get("content"):
+        velden.setdefault("titel", _eerste_tekst(og_titel["content"]))
+    meta_desc = soup.find("meta", attrs={"name": "description"})
+    if meta_desc and meta_desc.get("content"):
+        velden.setdefault("omschrijving", _eerste_tekst(meta_desc["content"]))
+
+    return {k: v for k, v in velden.items() if v}
+
+
+def verrijk_met_detailpagina(vacature, sessie):
+    """Vul ontbrekende velden aan met data uit de vacaturedetailpagina."""
+    url = vacature.get("url")
+    if not url:
+        return vacature
+    try:
+        html = sessie.get(url)
+    except Geblokkeerd as blok:
+        print(f"[{sessie.bron}] Detailpagina geblokkeerd ({blok}). Sla details over.")
+        return vacature
+    if not html:
+        return vacature
+
+    velden = extraheer_detail_velden(html)
+    verrijkt = dict(vacature)
+    for veld, waarde in velden.items():
+        if waarde and (not verrijkt.get(veld) or verrijkt.get(veld) in ("Onbekend bedrijf", "Nederland", "")):
+            verrijkt[veld] = waarde
+    return verrijkt
+
+
 def _parse_sitemap_locs(xml):
     """Geef (sub_sitemaps, paginas) terug uit een sitemap- of index-XML."""
     from xml.etree import ElementTree as ET
@@ -242,13 +401,11 @@ def _parse_sitemap_locs(xml):
 def lees_sitemap_urls(sitemap_url, bron, config, bevat="", max_urls=50):
     """Verzamel vacature-URL's uit een (geneste) sitemap.
 
-    Robots-conform alternatief voor sites die hun zoekpagina's in robots.txt
-    verbieden maar wel een sitemap publiceren. Respecteert robots.txt, delay en
-    caching via PoliteSession, en beperkt het aantal sitemap-fetches tot
-    'max_pages' (max 2).
+    Verzamel vacature-URL's uit sitemaps. Het aantal opgehaalde sitemapbestanden
+    wordt begrensd door 'max_sitemap_pages' of 'max_pages'.
     """
     sessie = PoliteSession(bron, config)
-    budget = min(int(config.get("max_pages", 2)), 2)
+    budget = int(config.get("max_sitemap_pages", config.get("max_pages", 2)))
     te_doen, verzameld, gezien = [sitemap_url], [], set()
 
     while te_doen and budget > 0 and len(verzameld) < max_urls:
@@ -286,11 +443,11 @@ def titel_uit_slug(url):
 
 
 def haal_pagina_html(bron, page_urls, config):
-    """Haal tot max_pages pagina's op; stop netjes bij een blokkade."""
-    max_pages = min(int(config.get("max_pages", 2)), 2)
+    """Haal zoekpagina's op; stop netjes bij een blokkade."""
+    max_fetch_pages = int(config.get("max_fetch_pages", len(page_urls)))
     sessie = PoliteSession(bron, config)
     htmls = []
-    for url in page_urls[:max_pages]:
+    for url in page_urls[:max_fetch_pages]:
         try:
             html = sessie.get(url)
         except Geblokkeerd as blok:

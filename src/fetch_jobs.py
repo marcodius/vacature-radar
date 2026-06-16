@@ -16,7 +16,7 @@ Leest config/sources.json (of het example-bestand) volgens dit schema:
 Bronnen worden in volgorde van 'priority' opgehaald via de provider_registry en
 samengevoegd in data/jobs_raw.json.
 
-Gebruik:  python src/fetch_jobs.py
+Gebruik:  python3 src/fetch_jobs.py
 """
 
 import json
@@ -27,6 +27,23 @@ from providers.provider_registry import get_provider
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CONFIG_DIR = os.path.join(PROJECT_DIR, "config")
 DATA_DIR = os.path.join(PROJECT_DIR, "data")
+
+
+def dedup_vacatures(vacatures):
+    """Dedupliceer over alle bronnen op URL en behoud de eerste vondst."""
+    gezien, resultaat = set(), []
+    for vacature in vacatures:
+        url = vacature.get("url")
+        sleutel = url or (
+            vacature.get("titel", "").lower(),
+            vacature.get("bedrijf", "").lower(),
+            vacature.get("locatie", "").lower(),
+        )
+        if sleutel in gezien:
+            continue
+        gezien.add(sleutel)
+        resultaat.append(vacature)
+    return resultaat
 
 
 def laad_config(naam):
@@ -62,6 +79,13 @@ def main():
         vacatures = provider.fetch({**bron_config, "_key": bron_key})
         print(f"[fetch] {len(vacatures)} vacatures uit '{bron_key}'.")
         alle_vacatures.extend(vacatures)
+
+    totaal_voor_dedup = len(alle_vacatures)
+    alle_vacatures = dedup_vacatures(alle_vacatures)
+    if len(alle_vacatures) != totaal_voor_dedup:
+        print(
+            f"[fetch] {totaal_voor_dedup - len(alle_vacatures)} dubbele vacatures verwijderd."
+        )
 
     os.makedirs(DATA_DIR, exist_ok=True)
     uitvoer = os.path.join(DATA_DIR, "jobs_raw.json")

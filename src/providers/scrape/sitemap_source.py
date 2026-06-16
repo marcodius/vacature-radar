@@ -28,14 +28,22 @@ def fetch(config):
     urls = _polite.lees_sitemap_urls(
         sitemap_url, naam, config, bevat=detail_bevat, max_urls=max_res
     )
-    resultaat = [{
-        "titel": _polite.titel_uit_slug(u),
-        "bedrijf": "Onbekend bedrijf",
-        "locatie": "Nederland",
-        "url": u,
-        "omschrijving": "",
-        "datum": "",
-        "bron": naam,
-    } for u in urls]
+    resultaat = []
+    sessie = _polite.PoliteSession(naam, config)
+    detail_limiet = int(config.get("max_detail_pages", 0))
+    for url in urls:
+        vacature = {
+            "titel": _polite.titel_uit_slug(url),
+            "bedrijf": "Onbekend bedrijf",
+            "locatie": "Nederland",
+            "url": url,
+            "omschrijving": "",
+            "datum": "",
+            "bron": naam,
+        }
+        if config.get("fetch_details") and len(resultaat) < detail_limiet:
+            vacature = _polite.verrijk_met_detailpagina(vacature, sessie)
+        resultaat.append(vacature)
+    resultaat = _polite.unieke_vacatures(resultaat)
     print(f"[{naam}] {len(resultaat)} vacatures via sitemap.")
     return resultaat
