@@ -31,7 +31,8 @@ def _via_sitemap(config):
     max_res = config.get("max_resultaten", 50)
     land = config.get("country", "")
     filter_aan, trefwoorden = relevance.filter_config(config)
-    lees_limiet = max_res * 8 if filter_aan else max_res
+    scan_factor = int(config.get("relevance_scan_factor", 15))
+    lees_limiet = max_res * scan_factor if filter_aan else max_res
     urls = _polite.lees_sitemap_urls(
         config.get("sitemap_url", SITEMAP_INDEX), NAAM, config,
         bevat="/nl/vacature/", max_urls=lees_limiet,

@@ -53,10 +53,12 @@ Voordat we verrijken/scoren knippen we per bron op vakgebied-trefwoorden
 junk-flood weg, richt het detail-ophaalbudget op relevante vacatures en versnelt
 de run. Dit is een grove voorfilter, geen scoring.
 
-Let op: detailverrijking werkt alleen voor server-gerenderde bronnen (JSON-LD),
-zoals WerkenvoorNederland. NVB-detailpagina's zijn JavaScript-only en Jobbird zit
-achter een CAPTCHA — daar blijft het bij titel uit de URL-slug. De betrouwbaarste
-matchbronnen (met locatie + omschrijving) zijn de API's (Adzuna, Jooble).
+Let op: detailverrijking werkt voor server-gerenderde bronnen (JSON-LD), zoals
+WerkenvoorNederland, Tempo-Team en Magnet.me. NVB-detailpagina's zijn
+JavaScript-only en worden via een headless browser (Playwright, `render_js: true`,
+zie `scrape/_browser.py`) verrijkt; Jobbird zit achter een CAPTCHA — daar blijft
+het bij titel uit de URL-slug. De betrouwbaarste matchbronnen (met locatie +
+omschrijving) zijn de API's (Adzuna, Jooble) en de server-gerenderde sitemaps.
 
 ## Belangrijke regels
 
@@ -69,13 +71,14 @@ matchbronnen (met locatie + omschrijving) zijn de API's (Adzuna, Jooble).
 
 ## Status
 
-Actieve bronnen: NVB-/WerkenvoorNederland-/Jobbird-sitemaps, Randstad,
-YoungCapital, LinkedIn (vaak 429), Talent.com, Jobrapido, en de API's Jooble +
-Adzuna (sleutels via Secrets). Extra gratis API's Arbeitnow en Jobicy staan aan
-(weinig NL-rendement onder de strikte locatieregel). RSS staat uit tot er echte
-feed-URL's zijn ingevuld. Geblokkeerd/uit: werk.nl, Indeed, SimplyHired
-(anti-bot/Cloudflare) en Joblift (404, gewijzigde URL-structuur) — voor
-LinkedIn/Indeed blijft handmatige import (`data/manual_links.json`) de fallback.
+Actieve bronnen: NVB-/WerkenvoorNederland-/Jobbird-sitemaps, Tempo-Team- en
+Magnet.me-sitemaps, Randstad, YoungCapital, LinkedIn (vaak 429), Talent.com,
+Jobrapido, en de API's Jooble + Adzuna (per zoekgebied × zoekterm, sleutels via
+Secrets). Extra gratis API's Arbeitnow en Jobicy staan aan (weinig NL-rendement
+onder de strikte locatieregel). RSS staat uit tot er echte feed-URL's zijn
+ingevuld. Geblokkeerd/uit: werk.nl, Indeed, SimplyHired (anti-bot/Cloudflare) en
+Joblift (404, gewijzigde URL-structuur) — voor LinkedIn/Indeed blijft handmatige
+import (`data/manual_links.json`) de fallback.
 
 Alle brede bronnen draaien door de relevantie-voorfilter, zodat alleen
 vakgebied-relevante vacatures de scoringsstap bereiken.

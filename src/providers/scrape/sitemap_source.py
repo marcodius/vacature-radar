@@ -30,7 +30,8 @@ def fetch(config):
     # Lees ruim in (de relevantiefilter knipt daarna fors), zodat we na het
     # filteren nog genoeg relevante vacatures overhouden.
     filter_aan, trefwoorden = relevance.filter_config(config)
-    lees_limiet = max_res * 8 if filter_aan else max_res
+    scan_factor = int(config.get("relevance_scan_factor", 15))
+    lees_limiet = max_res * scan_factor if filter_aan else max_res
     urls = _polite.lees_sitemap_urls(
         sitemap_url, naam, config, bevat=detail_bevat, max_urls=lees_limiet
     )

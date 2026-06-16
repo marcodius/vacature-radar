@@ -202,6 +202,29 @@ def extraheer_maandsalaris(tekst):
     return max(maandbedragen)
 
 
+# Stopwoorden die we negeren bij het matchen van positieve werkzaamheden, zodat
+# generieke woorden ("werkzaamheden", "onderdeel") niet onterecht matchen.
+ACTIVITEIT_STOPWOORDEN = {
+    "werkzaamheden", "als", "onderdeel", "van", "een", "bredere", "functie",
+    "en", "de", "het", "met", "voor", "op", "in",
+}
+# Korte maar betekenisvolle termen die we wél meenemen (anders door lengte weg).
+ACTIVITEIT_KORT = {"crm"}
+
+
+def activiteit_match(activiteit, tekst):
+    """True als een betekenisvol woord uit de activiteit als heel woord in de
+    tekst staat. Splitst op niet-letters (zodat 'CRM-beheer' -> crm + beheer),
+    negeert stopwoorden en te korte woorden."""
+    for woord in re.split(r"[^a-zà-ÿ]+", activiteit.lower()):
+        if not woord or woord in ACTIVITEIT_STOPWOORDEN:
+            continue
+        if len(woord) >= 5 or woord in ACTIVITEIT_KORT:
+            if re.search(r"\b" + re.escape(woord) + r"\b", tekst):
+                return True
+    return False
+
+
 def titel_match(titel, titels):
     """Geeft de gematchte titel terug, of None. Case-insensitief, deelmatch."""
     t = titel.lower()
@@ -342,7 +365,7 @@ def score_uitgebreid(vacature, profiel_config):
 
     # --- Stap 3: inhoudelijke match ---
     activiteiten = profiel_config.get("positive_work_activities", [])
-    activiteit_hits = [a for a in activiteiten if a.lower().split()[0] in tekst]
+    activiteit_hits = [a for a in activiteiten if activiteit_match(a, tekst)]
     if activiteit_hits:
         score += 20
         redenen.append("Werkzaamheden passen goed (+20)")
