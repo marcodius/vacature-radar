@@ -10,6 +10,7 @@ Drie typen bronnen:
 - "manual"         : handmatige fallback-import (bijv. LinkedIn, Indeed).
 """
 
+from providers import arbeitnow, jobicy, rss
 from providers.api import adzuna, jooble, nationale_vacaturebank, vacatures_overheid
 from providers.manual import manual_links
 from providers.scrape import (
@@ -30,6 +31,10 @@ REGISTRY = {
     "vacatures_overheid": vacatures_overheid,
     "jooble": jooble,
     "adzuna": adzuna,
+    # Extra gratis API-bronnen (geen sleutel)
+    "arbeitnow": arbeitnow,
+    "jobicy": jobicy,
+    "rss": rss,
     # Scrape-bronnen
     "werk_nl": werk_nl,
     "jobbird": jobbird,

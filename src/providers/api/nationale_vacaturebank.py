@@ -23,6 +23,7 @@ def _normaliseer(item):
         "omschrijving": item.get("omschrijving") or item.get("description") or "",
         "datum": item.get("datum") or item.get("date") or "",
         "bron": NAAM,
+        "land": "NL",
     }
 
 

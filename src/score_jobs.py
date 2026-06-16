@@ -106,12 +106,16 @@ def _woord_in(term, *teksten):
     return any(re.search(patroon, t) for t in teksten)
 
 
-def classificeer_locatie(locatie, tekst, gematchte_locatie):
+def classificeer_locatie(locatie, tekst, gematchte_locatie, land=""):
     """Bepaal de locatieklasse:
     'zoekgebied' (Nederlandse stad uit een profiel),
     'remote_eu' (expliciet remote Nederland/Europa),
     'nl' (Nederland maar buiten de zoekgebieden),
     'buiten' (buitenland of niet herleidbaar -> dealbreaker).
+
+    'land' is een bronhint (bijv. "NL" voor Nederlandse API/sitemap-bronnen):
+    een vacature uit een NL-bron waarvan de plaats niet uit de tekst te halen is,
+    wordt als 'nl' gezien i.p.v. onterecht als buitenland.
     """
     loc = (locatie or "").lower()
 
@@ -124,16 +128,18 @@ def classificeer_locatie(locatie, tekst, gematchte_locatie):
     if gematchte_locatie:
         return "zoekgebied"
 
-    # 3. Expliciet remote in Nederland of Europa.
+    # 3. Expliciet remote in Nederland of Europa (ook geldig voor NL-bronnen).
     is_remote = any(r in loc for r in REMOTE_TERMEN) or any(r in tekst for r in REMOTE_TERMEN)
     nl_of_eu = (any(n in loc for n in NL_LOCATIES) or any(n in tekst for n in NL_LOCATIES)
-                or any(eu in loc for eu in EU_TERMEN) or any(eu in tekst for eu in EU_TERMEN))
+                or any(eu in loc for eu in EU_TERMEN) or any(eu in tekst for eu in EU_TERMEN)
+                or land.upper() == "NL")
     if is_remote and nl_of_eu:
         return "remote_eu"
 
     # 4. Nederland, maar buiten de twee zoekgebieden.
     if (any(n in loc for n in NL_LOCATIES) or _woord_in("nl", loc)
-            or any(_woord_in(s, loc) for s in NL_STEDEN)):
+            or any(_woord_in(s, loc) for s in NL_STEDEN)
+            or land.upper() == "NL"):
         return "nl"
 
     # 5. Niet herleidbaar tot Nederland -> afwijzen.
@@ -237,8 +243,21 @@ def score_uitgebreid(vacature, profiel_config):
     profielen = profiel_config.get("profiles", [])
 
     # --- Profiel + locatie ---
-    profiel, gematchte_locatie = kies_profiel(tekst, profielen)
-    loc_klasse = classificeer_locatie(vacature.get("locatie", ""), tekst, gematchte_locatie)
+    # Match het zoekgebied bij voorkeur op het expliciete locatieveld (+ titel),
+    # niet op de hele omschrijving: een vacature in Hengelo die Utrecht terloops
+    # noemt, hoort niet als 'Utrecht' te tellen. Alleen als het locatieveld
+    # generiek is ("Nederland"/"Onbekend"/"Remote") vallen we terug op de tekst.
+    loc_veld = (vacature.get("locatie", "") or "").strip().lower()
+    generiek = loc_veld in ("", "nederland", "the netherlands", "holland",
+                            "onbekend", "remote", "thuis", "hybride")
+    locatie_tekst = tekst if generiek else " ".join(
+        [vacature.get("locatie", ""), titel]
+    ).lower()
+    profiel, gematchte_locatie = kies_profiel(locatie_tekst, profielen)
+    loc_klasse = classificeer_locatie(
+        vacature.get("locatie", ""), tekst, gematchte_locatie,
+        land=vacature.get("land", ""),
+    )
     if profiel:
         profiel_naam = profiel["name"]
     elif loc_klasse == "remote_eu":

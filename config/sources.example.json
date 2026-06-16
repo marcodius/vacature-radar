@@ -17,13 +17,40 @@
       "enabled": true,
       "type": "api",
       "country": "NL",
-      "priority": 3
+      "priority": 3,
+      "max_resultaten": 150,
+      "_uitleg": "Gratis API (JOOBLE_API_KEY via Secrets). Zoekt per zoekgebied × zoekterm; levert locatie + omschrijving, dus een betrouwbare matchbron.",
+      "locations": [
+        "Amsterdam", "Utrecht", "Arnhem", "Nijmegen", "Amersfoort",
+        "Ede", "Wageningen", "Veenendaal"
+      ],
+      "trefwoorden": [
+        "CRM Specialist", "Salesforce", "HubSpot", "Revenue Operations",
+        "Sales Operations", "Sales Support", "Customer Success",
+        "Business Operations", "Operations Specialist", "Projectcoördinator",
+        "Commercieel medewerker binnendienst"
+      ]
     },
     "adzuna": {
       "enabled": true,
       "type": "api",
       "country": "NL",
-      "priority": 4
+      "priority": 4,
+      "max_resultaten": 150,
+      "results_per_page": 20,
+      "distance_km": 15,
+      "_uitleg": "Gratis API (ADZUNA_APP_ID/KEY via Secrets). Zoekt per zoekgebied (where + distance_km) × zoekterm; levert locatie + omschrijving.",
+      "locations": [
+        "Amsterdam", "Utrecht", "Arnhem", "Nijmegen", "Amersfoort",
+        "Ede", "Wageningen", "Veenendaal"
+      ],
+      "trefwoorden": [
+        "Salesforce CRM HubSpot",
+        "Revenue Operations Sales Operations",
+        "Customer Success Operations Business Operations",
+        "Sales Support Commercieel binnendienst",
+        "Projectcoördinator Implementatie Specialist"
+      ]
     },
     "werk_nl": {
       "enabled": true,
@@ -63,14 +90,17 @@
       "type": "polite_scrape",
       "country": "NL",
       "priority": 6,
+      "naam": "Jobbird",
       "mode": "sitemap",
       "sitemap_url": "https://www.jobbird.com/nl/sitemaps/index.xml",
+      "detail_bevat": "/vacature",
       "max_pages": 10,
       "delay_seconds": 0.2,
       "respect_robots_txt": false,
       "stop_on_block": true,
-      "_uitleg": "Sitemapmodus is de stabiele route; zoekpagina-scrape kan ook worden ingericht wanneer meer detail nodig is.",
-      "max_resultaten": 250,
+      "filter_relevant": true,
+      "_uitleg": "Sitemapmodus is de stabiele route. Detailpagina's zitten meestal achter een CAPTCHA/login-wall, dus verrijking lukt vaak niet; de relevantiefilter op de URL-slug haalt het meeste rendement.",
+      "max_resultaten": 80,
       "max_sitemap_pages": 10,
       "fetch_details": true,
       "max_detail_pages": 25
@@ -166,17 +196,19 @@
       "country": "NL",
       "priority": 2,
       "naam": "WerkenvoorNederland",
+      "country": "NL",
       "sitemap_url": "https://www.werkenvoornederland.nl/sitemap-vacatures.xml",
       "detail_bevat": "/vacature",
       "max_pages": 10,
       "delay_seconds": 0.2,
       "respect_robots_txt": false,
       "stop_on_block": true,
-      "_uitleg": "Gratis overheidsvacatures (WerkenvoorNederland/WerkenbijdeOverheid) zonder API-sleutel. De site publiceert sitemap-vacatures.xml. Hetzelfde aanbod als de betaalde CSO-API, maar via de sitemap. Verifieer 'detail_bevat' als de URL-structuur afwijkt.",
-      "max_resultaten": 250,
+      "filter_relevant": true,
+      "_uitleg": "Gratis overheidsvacatures (WerkenvoorNederland/WerkenbijdeOverheid) zonder API-sleutel. De site publiceert sitemap-vacatures.xml. Hetzelfde aanbod als de betaalde CSO-API, maar via de sitemap. 'filter_relevant' knipt eerst op vakgebied; daarna verrijken we de relevante subset met detailpagina's.",
+      "max_resultaten": 80,
       "max_sitemap_pages": 10,
       "fetch_details": true,
-      "max_detail_pages": 25
+      "max_detail_pages": 80
     },
     "nationale_vacaturebank_sitemap": {
       "enabled": true,
@@ -184,17 +216,21 @@
       "country": "NL",
       "priority": 1,
       "naam": "Nationale Vacaturebank",
+      "country": "NL",
       "sitemap_url": "https://www.nationalevacaturebank.nl/cdn/sitemaps/vacature.xml",
       "detail_bevat": "/vacature",
       "max_pages": 10,
       "delay_seconds": 0.2,
       "respect_robots_txt": false,
       "stop_on_block": true,
-      "max_resultaten": 250,
+      "filter_relevant": true,
+      "render_js": true,
+      "render_timeout_ms": 30000,
+      "max_resultaten": 60,
       "max_sitemap_pages": 10,
       "fetch_details": true,
-      "max_detail_pages": 25,
-      "_uitleg": "Lees vacatures uit de NVB-vacature-sitemap en verrijk de eerste detailpagina’s waar mogelijk."
+      "max_detail_pages": 40,
+      "_uitleg": "NVB-detailpagina's zijn JavaScript-only; 'render_js' verrijkt de relevante subset via een headless browser (Playwright) en haalt zo echte locatie/omschrijving/salaris op. Filtert eerst op vakgebied zodat het browser-budget beperkt blijft."
     },
     "linkedin": {
       "enabled": true,
@@ -453,11 +489,12 @@
       "max_fetch_pages": 40
     },
     "joblift": {
-      "enabled": true,
+      "enabled": false,
       "type": "polite_scrape",
       "country": "NL",
       "priority": 15,
       "naam": "Joblift",
+      "_reden_uit": "Geverifieerd (juni 2026): joblift.nl/vacatures geeft HTTP 404 voor alle query-combinaties; de site heeft de zoek-URL-structuur gewijzigd of trekt zich terug uit NL. Tot een werkende URL-structuur bekend is, staat de bron uit.",
       "base_url": "https://joblift.nl/vacatures",
       "basis_url": "https://joblift.nl",
       "query_param": "q",
@@ -493,6 +530,38 @@
       "stop_on_block": true,
       "detect_block_html": false,
       "max_fetch_pages": 40
+    },
+    "arbeitnow": {
+      "enabled": true,
+      "type": "api",
+      "country": "NL",
+      "priority": 16,
+      "max_resultaten": 50,
+      "_uitleg": "Gratis open API zonder sleutel. Vooral Duits/EU-aanbod; de provider filtert grof op Nederlandse/remote locaties. Levert in de praktijk weinig NL-treffers, maar kost niets en kan af en toe een remote-NL functie opleveren."
+    },
+    "jobicy": {
+      "enabled": true,
+      "type": "api",
+      "country": "",
+      "priority": 17,
+      "max_resultaten": 50,
+      "geo": "netherlands",
+      "post_filter_keywords": [
+        "crm", "salesforce", "hubspot", "operations", "revenue operations",
+        "sales operations", "customer success", "customer operations",
+        "business operations", "sales support", "project"
+      ],
+      "_uitleg": "Gratis remote-jobs API zonder sleutel. Internationaal remote; 'geo' en 'post_filter_keywords' beperken tot relevante (remote-)functies. Onder de strikte NL-locatieregel halen alleen functies met expliciet Nederland/Europa de site."
+    },
+    "rss": {
+      "enabled": false,
+      "type": "api",
+      "priority": 18,
+      "max_resultaten": 50,
+      "_uitleg": "Generieke RSS-provider. Zet 'enabled' op true en vul echte feed-URL's in zodra je vacaturebanken met een publieke RSS-/Atom-feed hebt gevonden. Geen scraping: je gebruikt de feed die de bron zelf publiceert.",
+      "feeds": [
+        {"naam": "Voorbeeldboard", "url": "https://plaats_hier_een_echte_feed.nl/vacatures/rss"}
+      ]
     }
   }
 }

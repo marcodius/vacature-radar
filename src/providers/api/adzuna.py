@@ -31,11 +31,26 @@ def _normaliseer(item):
         "omschrijving": item.get("description") or "",
         "datum": (item.get("created") or "")[:10],
         "bron": NAAM,
+        "land": "NL",
     }
+
+
+def _locaties(config):
+    """Lijst zoeklocaties: 'locations' (lijst) of 'locatie' (enkel), anders [""]."""
+    locs = config.get("locations")
+    if locs is None:
+        enkel = config.get("locatie", "")
+        locs = [enkel] if enkel else [""]
+    if isinstance(locs, str):
+        locs = [locs]
+    schoon = [str(l).strip() for l in locs if str(l).strip()]
+    return schoon or [""]
 
 
 def fetch(config):
     max_resultaten = config.get("max_resultaten", 50)
+    per_page = int(config.get("results_per_page", 25))
+    distance = config.get("distance_km")
     app_id = os.environ.get("ADZUNA_APP_ID")
     app_key = os.environ.get("ADZUNA_APP_KEY")
     if not app_id or not app_key:
@@ -45,27 +60,34 @@ def fetch(config):
     trefwoorden = config.get("trefwoorden", STANDAARD_TREFWOORDEN)
     if isinstance(trefwoorden, str):
         trefwoorden = [trefwoorden] if trefwoorden else [""]
-    locatie = config.get("locatie", "")
+    locaties = _locaties(config)
 
     gezien, resultaat = set(), []
-    for what in trefwoorden:
-        params = {
-            "app_id": app_id, "app_key": app_key,
-            "results_per_page": max_resultaten, "content-type": "application/json",
-        }
-        if what:
-            params["what"] = what
-        if locatie:
-            params["where"] = locatie
-        try:
-            response = requests.get(API_URL, params=params, timeout=30)
-            response.raise_for_status()
-            for item in (response.json().get("results") or []):
-                v = _normaliseer(item)
-                if v["url"] and v["url"] in gezien:
-                    continue
-                gezien.add(v["url"])
-                resultaat.append(v)
-        except Exception as fout:  # noqa: BLE001
-            print(f"[Adzuna] Zoekterm '{what}' mislukt: {fout}. Overslaan.")
+    for locatie in locaties:
+        for what in trefwoorden:
+            if len(resultaat) >= max_resultaten:
+                break
+            params = {
+                "app_id": app_id, "app_key": app_key,
+                "results_per_page": per_page, "content-type": "application/json",
+            }
+            if what:
+                params["what"] = what
+            if locatie:
+                params["where"] = locatie
+                if distance:
+                    params["distance"] = distance
+            try:
+                response = requests.get(API_URL, params=params, timeout=30)
+                response.raise_for_status()
+                for item in (response.json().get("results") or []):
+                    v = _normaliseer(item)
+                    if v["url"] and v["url"] in gezien:
+                        continue
+                    gezien.add(v["url"])
+                    resultaat.append(v)
+            except Exception as fout:  # noqa: BLE001
+                print(f"[Adzuna] '{what}' @ '{locatie or 'NL'}' mislukt: {fout}. Overslaan.")
+    print(f"[Adzuna] {len(resultaat)} vacatures uit {len(locaties)} locatie(s) × "
+          f"{len(trefwoorden)} zoekterm(en).")
     return resultaat[:max_resultaten]

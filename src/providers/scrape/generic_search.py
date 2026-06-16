@@ -13,6 +13,7 @@ Config stuurt URL-opbouw en linkextractie:
 """
 
 from . import _polite
+from .. import relevance
 
 
 def _page_urls(config):
@@ -37,6 +38,7 @@ def fetch(config):
     detail_bevat = config.get("detail_bevat", "/vacature")
     basis_url = config.get("basis_url") or config.get("base_url")
 
+    land = config.get("country", "")
     htmls = _polite.haal_pagina_html(naam, _page_urls(config), config)
     resultaat = []
     for html in htmls:
@@ -51,5 +53,20 @@ def fetch(config):
         )
 
     resultaat = _polite.unieke_vacatures(resultaat)
-    print(f"[{naam}] {len(resultaat)} vacatures uit {len(htmls)} pagina('s).")
+    if land:
+        for v in resultaat:
+            v.setdefault("land", land)
+
+    filter_aan, trefwoorden = relevance.filter_config(config)
+    if filter_aan:
+        totaal = len(resultaat)
+        resultaat = [
+            v for v in resultaat
+            if relevance.is_relevant(v.get("titel", ""), v.get("url", ""),
+                                     trefwoorden=trefwoorden)
+        ]
+        print(f"[{naam}] {len(resultaat)} van {totaal} vacatures relevant na voorfilter "
+              f"(uit {len(htmls)} pagina's).")
+    else:
+        print(f"[{naam}] {len(resultaat)} vacatures uit {len(htmls)} pagina('s).")
     return resultaat[: config.get("max_resultaten", 100)]

@@ -21,7 +21,10 @@ src/
   providers/
     nationale_vacaturebank.py   # primaire bron (mock-fallback, echte API via NVB_API_KEY)
     adzuna.py                   # extra bron, standaard uit (ADZUNA_APP_ID/KEY)
-    arbeitnow.py                # extra bron, standaard uit (gratis, geen sleutel)
+    arbeitnow.py                # extra bron (gratis, geen sleutel; vooral EU/remote)
+    jobicy.py                   # extra bron (gratis remote-jobs API, geen sleutel)
+    rss.py                      # generieke RSS/Atom-provider (feeds in sources.json)
+    relevance.py                # gedeelde vakgebied-voorfilter voor brede bronnen
     manual_links.py             # handmatige fallback-links uit data/manual_links.json
   fetch_jobs.py                 # stap 1: ophalen -> data/jobs_raw.json
   score_jobs.py                 # stap 2: scoren  -> data/jobs_scored.json
@@ -36,10 +39,24 @@ data/
 ### Provider-contract
 
 Elke provider heeft `fetch(config) -> list[dict]`. Elke vacature is een dict met:
-`titel`, `bedrijf`, `locatie`, `url`, `omschrijving`, `datum`, `bron`.
+`titel`, `bedrijf`, `locatie`, `url`, `omschrijving`, `datum`, `bron`. Optioneel
+`land` (bijv. `"NL"`) als bronhint voor de locatieclassificatie.
 Zo blijft de rest van de pijplijn bronnen-onafhankelijk.
 
 Bronnen zijn aan/uit te zetten via `config/sources.json` (`"aan": true/false`).
+
+### Relevantie-voorfilter (`providers/relevance.py`)
+
+Brede bronnen (sitemaps, lijst-scrapers) leveren vacatures uit álle sectoren.
+Voordat we verrijken/scoren knippen we per bron op vakgebied-trefwoorden
+(`"filter_relevant": true`, overschrijf met `"relevance_keywords"`). Dat haalt de
+junk-flood weg, richt het detail-ophaalbudget op relevante vacatures en versnelt
+de run. Dit is een grove voorfilter, geen scoring.
+
+Let op: detailverrijking werkt alleen voor server-gerenderde bronnen (JSON-LD),
+zoals WerkenvoorNederland. NVB-detailpagina's zijn JavaScript-only en Jobbird zit
+achter een CAPTCHA — daar blijft het bij titel uit de URL-slug. De betrouwbaarste
+matchbronnen (met locatie + omschrijving) zijn de API's (Adzuna, Jooble).
 
 ## Belangrijke regels
 
@@ -52,9 +69,16 @@ Bronnen zijn aan/uit te zetten via `config/sources.json` (`"aan": true/false`).
 
 ## Status
 
-Versie 1: Nationale Vacaturebank draait op mock-data (geen gratis publieke API).
-Adzuna en Arbeitnow zijn voorbereid maar standaard uit. Eerst uitbreiden nadat
-de minimale versie werkt.
+Actieve bronnen: NVB-/WerkenvoorNederland-/Jobbird-sitemaps, Randstad,
+YoungCapital, LinkedIn (vaak 429), Talent.com, Jobrapido, en de API's Jooble +
+Adzuna (sleutels via Secrets). Extra gratis API's Arbeitnow en Jobicy staan aan
+(weinig NL-rendement onder de strikte locatieregel). RSS staat uit tot er echte
+feed-URL's zijn ingevuld. Geblokkeerd/uit: werk.nl, Indeed, SimplyHired
+(anti-bot/Cloudflare) en Joblift (404, gewijzigde URL-structuur) — voor
+LinkedIn/Indeed blijft handmatige import (`data/manual_links.json`) de fallback.
+
+Alle brede bronnen draaien door de relevantie-voorfilter, zodat alleen
+vakgebied-relevante vacatures de scoringsstap bereiken.
 
 ## Lokaal draaien
 

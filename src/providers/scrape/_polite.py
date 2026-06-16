@@ -346,7 +346,9 @@ def extraheer_detail_velden(html):
                 )
             beschrijving = obj.get("description")
             if beschrijving:
-                velden["omschrijving"] = _eerste_tekst(beschrijving, velden.get("omschrijving", ""))
+                import re as _re
+                schoon = _re.sub(r"<[^>]+>", " ", beschrijving).replace("&nbsp;", " ")
+                velden["omschrijving"] = _eerste_tekst(schoon, velden.get("omschrijving", ""))
             velden["datum"] = _eerste_tekst(obj.get("datePosted"), velden.get("datum", ""))
 
     og_titel = soup.find("meta", property="og:title")

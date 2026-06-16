@@ -13,6 +13,7 @@ Volgt verder de regels in docs/source_policy.md. Standaard uitgeschakeld.
 """
 
 from . import _polite
+from .. import relevance
 
 NAAM = "Jobbird"
 BASIS = "https://www.jobbird.com"
@@ -28,13 +29,23 @@ def _search_page_urls(config):
 
 def _via_sitemap(config):
     max_res = config.get("max_resultaten", 50)
+    land = config.get("country", "")
+    filter_aan, trefwoorden = relevance.filter_config(config)
+    lees_limiet = max_res * 8 if filter_aan else max_res
     urls = _polite.lees_sitemap_urls(
         config.get("sitemap_url", SITEMAP_INDEX), NAAM, config,
-        bevat="/nl/vacature/", max_urls=max_res,
+        bevat="/nl/vacature/", max_urls=lees_limiet,
     )
+    if filter_aan:
+        totaal = len(urls)
+        urls = [u for u in urls if relevance.is_relevant(u, trefwoorden=trefwoorden)]
+        print(f"[Jobbird] {len(urls)} van {totaal} sitemap-URL's relevant na voorfilter.")
+    urls = urls[:max_res]
+
     resultaat = []
     sessie = _polite.PoliteSession(NAAM, config)
     detail_limiet = int(config.get("max_detail_pages", 0))
+    verrijkt_aantal = 0
     for url in urls:
         vacature = {
             "titel": _polite.titel_uit_slug(url),
@@ -44,11 +55,14 @@ def _via_sitemap(config):
             "omschrijving": "",
             "datum": "",
             "bron": NAAM,
+            "land": land,
         }
-        if config.get("fetch_details") and len(resultaat) < detail_limiet:
+        if config.get("fetch_details") and verrijkt_aantal < detail_limiet:
             vacature = _polite.verrijk_met_detailpagina(vacature, sessie)
+            verrijkt_aantal += 1
         resultaat.append(vacature)
-    print(f"[Jobbird] {len(resultaat)} vacatures via sitemap.")
+    print(f"[Jobbird] {len(resultaat)} vacatures via sitemap "
+          f"({verrijkt_aantal} verrijkt met detailpagina).")
     return resultaat
 
 

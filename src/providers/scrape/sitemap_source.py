@@ -13,6 +13,7 @@ Config (per bron in sources.json):
 """
 
 from . import _polite
+from .. import relevance
 
 
 def fetch(config):
@@ -20,17 +21,36 @@ def fetch(config):
     sitemap_url = config.get("sitemap_url")
     detail_bevat = config.get("detail_bevat", "")
     max_res = config.get("max_resultaten", 50)
+    land = config.get("country", "")
 
     if not sitemap_url:
         print(f"[{naam}] Geen 'sitemap_url' in config. Bron wordt overgeslagen.")
         return []
 
+    # Lees ruim in (de relevantiefilter knipt daarna fors), zodat we na het
+    # filteren nog genoeg relevante vacatures overhouden.
+    filter_aan, trefwoorden = relevance.filter_config(config)
+    lees_limiet = max_res * 8 if filter_aan else max_res
     urls = _polite.lees_sitemap_urls(
-        sitemap_url, naam, config, bevat=detail_bevat, max_urls=max_res
+        sitemap_url, naam, config, bevat=detail_bevat, max_urls=lees_limiet
     )
+
+    if filter_aan:
+        totaal = len(urls)
+        urls = [u for u in urls if relevance.is_relevant(u, trefwoorden=trefwoorden)]
+        print(f"[{naam}] {len(urls)} van {totaal} sitemap-URL's relevant na voorfilter.")
+    urls = urls[:max_res]
+
     resultaat = []
-    sessie = _polite.PoliteSession(naam, config)
+    # JS-gerenderde bronnen (bijv. NVB) verrijken we via een headless browser;
+    # andere bronnen via een gewone HTTP-sessie.
+    if config.get("render_js"):
+        from . import _browser
+        sessie = _browser.BrowserRenderer(naam, config)
+    else:
+        sessie = _polite.PoliteSession(naam, config)
     detail_limiet = int(config.get("max_detail_pages", 0))
+    verrijkt_aantal = 0
     for url in urls:
         vacature = {
             "titel": _polite.titel_uit_slug(url),
@@ -40,10 +60,15 @@ def fetch(config):
             "omschrijving": "",
             "datum": "",
             "bron": naam,
+            "land": land,
         }
-        if config.get("fetch_details") and len(resultaat) < detail_limiet:
+        if config.get("fetch_details") and verrijkt_aantal < detail_limiet:
             vacature = _polite.verrijk_met_detailpagina(vacature, sessie)
+            verrijkt_aantal += 1
         resultaat.append(vacature)
+    if hasattr(sessie, "close"):
+        sessie.close()
     resultaat = _polite.unieke_vacatures(resultaat)
-    print(f"[{naam}] {len(resultaat)} vacatures via sitemap.")
+    print(f"[{naam}] {len(resultaat)} vacatures via sitemap "
+          f"({verrijkt_aantal} verrijkt met detailpagina).")
     return resultaat
