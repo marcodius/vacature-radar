@@ -12,7 +12,7 @@ Drie typen bronnen:
 
 from providers.api import adzuna, jooble, nationale_vacaturebank, vacatures_overheid
 from providers.manual import manual_links
-from providers.scrape import jobbird, randstad, werk_nl, youngcapital
+from providers.scrape import jobbird, randstad, sitemap_source, werk_nl, youngcapital
 
 # bronsleutel -> module met fetch(config)
 REGISTRY = {
@@ -26,6 +26,9 @@ REGISTRY = {
     "jobbird": jobbird,
     "randstad": randstad,
     "youngcapital": youngcapital,
+    # Gratis sitemap-bronnen (robots-conform alternatief voor betaalde scrape)
+    "werk_nl_sitemap": sitemap_source,
+    "nationale_vacaturebank_sitemap": sitemap_source,
     # Manual-only bronnen (LinkedIn/Indeed) — beide via manual_links
     "linkedin_manual": manual_links,
     "indeed_manual": manual_links,

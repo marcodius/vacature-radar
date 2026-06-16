@@ -129,13 +129,15 @@ class PoliteSession:
         return resp.text
 
 
-def extraheer_vacatures(html, detail_bevat, basis_url, bron):
+def extraheer_vacatures(html, detail_bevat, basis_url, bron, detail_regex=None):
     """Best-effort extractie van vacatures uit een zoekresultaatpagina.
 
-    Zoekt links naar detailpagina's (href bevat 'detail_bevat'). Niet elke site
-    heeft titel/bedrijf/locatie in de lijst; ontbrekende velden worden 'Onbekend'.
-    De selectors zijn bewust generiek; pas ze aan als een site wijzigt.
+    Zoekt links naar detailpagina's (href bevat 'detail_bevat', en voldoet
+    optioneel aan 'detail_regex' om navigatielinks uit te sluiten). Niet elke
+    site heeft titel/bedrijf/locatie in de lijst; ontbrekende velden worden
+    'Onbekend'/'Nederland'. Selectors zijn generiek; pas aan als een site wijzigt.
     """
+    import re
     from urllib.parse import urljoin
 
     try:
@@ -144,11 +146,14 @@ def extraheer_vacatures(html, detail_bevat, basis_url, bron):
         print(f"[{bron}] beautifulsoup4 niet geinstalleerd. Bron wordt overgeslagen.")
         return []
 
+    patroon = re.compile(detail_regex) if detail_regex else None
     soup = BeautifulSoup(html, "html.parser")
     gezien, resultaat = set(), []
     for a in soup.find_all("a", href=True):
         href = a["href"]
         if detail_bevat not in href:
+            continue
+        if patroon and not patroon.search(href):
             continue
         url = urljoin(basis_url, href)
         if url in gezien:
@@ -167,6 +172,69 @@ def extraheer_vacatures(html, detail_bevat, basis_url, bron):
             "bron": bron,
         })
     return resultaat
+
+
+def _parse_sitemap_locs(xml):
+    """Geef (sub_sitemaps, paginas) terug uit een sitemap- of index-XML."""
+    from xml.etree import ElementTree as ET
+    try:
+        root = ET.fromstring(xml)
+    except Exception:  # noqa: BLE001
+        return [], []
+    sub, paginas = [], []
+    for el in root.iter():
+        if el.tag.lower().endswith("loc"):
+            u = (el.text or "").strip()
+            if u.endswith(".xml") or "/sitemap" in u.lower():
+                sub.append(u)
+            else:
+                paginas.append(u)
+    return sub, paginas
+
+
+def lees_sitemap_urls(sitemap_url, bron, config, bevat="", max_urls=50):
+    """Verzamel vacature-URL's uit een (geneste) sitemap.
+
+    Robots-conform alternatief voor sites die hun zoekpagina's in robots.txt
+    verbieden maar wel een sitemap publiceren. Respecteert robots.txt, delay en
+    caching via PoliteSession, en beperkt het aantal sitemap-fetches tot
+    'max_pages' (max 2).
+    """
+    sessie = PoliteSession(bron, config)
+    budget = min(int(config.get("max_pages", 2)), 2)
+    te_doen, verzameld, gezien = [sitemap_url], [], set()
+
+    while te_doen and budget > 0 and len(verzameld) < max_urls:
+        url = te_doen.pop(0)
+        if url in gezien:
+            continue
+        gezien.add(url)
+        try:
+            xml = sessie.get(url)
+        except Geblokkeerd as blok:
+            print(f"[{bron}] Sitemap geblokkeerd ({blok}). Stoppen.")
+            break
+        budget -= 1
+        if not xml:
+            continue
+        sub, paginas = _parse_sitemap_locs(xml)
+        for p in paginas:
+            if (not bevat or bevat in p) and p not in verzameld:
+                verzameld.append(p)
+                if len(verzameld) >= max_urls:
+                    break
+        # Voeg sub-sitemaps toe als we nog niet genoeg hebben.
+        te_doen.extend(s for s in sub if s not in gezien)
+    return verzameld[:max_urls]
+
+
+def titel_uit_slug(url):
+    """Leid een leesbare titel af uit de laatste URL-slug (zonder id-prefix)."""
+    slug = url.rstrip("/").split("/")[-1]
+    deel = slug.split("-", 1)
+    if len(deel) > 1 and deel[0].isdigit():
+        slug = deel[1]
+    return slug.replace("-", " ").strip().capitalize() or "Onbekende functie"
 
 
 def haal_pagina_html(bron, page_urls, config):

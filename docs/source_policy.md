@@ -39,9 +39,43 @@ Deze regels worden afgedwongen in `src/providers/scrape/_polite.py`:
 - Geen scraping achter login.
 - Duidelijke user-agent met projectnaam.
 
-Scrape-bronnen staan standaard uit (`"enabled": false`). Zet ze één voor één
-aan en controleer of ze stabiel en netjes werken. De HTML-selectors zijn
-best-effort en kunnen aangepast moeten worden als een site wijzigt.
+De HTML-selectors zijn best-effort en kunnen aangepast moeten worden als een
+site wijzigt.
+
+### Robots- en haalbaarheidscheck (juni 2026)
+
+| Bron | robots.txt | Statische HTML bruikbaar? | Status |
+| --- | --- | --- | --- |
+| Randstad | `/vacatures/` toegestaan | Ja — echte vacaturelinks aanwezig | **Aan** |
+| Werk.nl | vacatures toegestaan | Nee — volledig JavaScript-gerenderd | Uit |
+| Jobbird | zoekpagina's verboden (`Disallow: /nl/vacature?*`) | n.v.t. | Uit |
+| YoungCapital | relevante categorie-/zoekpagina's verboden | n.v.t. | Uit |
+
+Alleen Randstad is robots-toegestaan én bruikbaar met een statische scraper en
+staat daarom aan. De andere drie blijven uit; de reden staat per bron in
+`config/sources.example.json` (`_reden_uit`). Werk.nl en Randstad kunnen later
+alsnog via een (zwaardere) gerenderde aanpak, maar dat valt buiten versie 1.
+
+## Sitemaps als gratis route (geen betaalde scrape-diensten)
+
+Sommige sites verbieden hun zoekpagina's in robots.txt (Jobbird, YoungCapital)
+of zijn volledig JavaScript-gerenderd (Werk.nl). Daarvoor gebruiken we de
+officiele **sitemap** die de site zelf publiceert en in robots.txt aankondigt —
+de door de site bedoelde crawl-route. We lezen er vacature-URL's uit en leiden
+de titel af uit de URL-slug (`src/providers/scrape/sitemap_source.py`, met de
+gedeelde `_polite`-regels: robots, delay, caching, stop bij blokkade).
+
+Dit is bewust een gratis alternatief voor betaalde scrape-diensten zoals Apify.
+Apify-actors voor o.a. Werk.nl en Nationale Vacaturebank doen hetzelfde, maar
+vereisen een account, API-token en credits (kosten). Dat botst met het
+uitgangspunt "geen betaalde diensten in versie 1" en wordt daarom niet gebruikt.
+
+Sitemap-bronnen leveren titel + locatie + link, maar geen salaris/bedrijf/
+volledige tekst (dat zou per vacature een detailpagina-fetch vereisen). Voor
+Werk.nl en Nationale Vacaturebank staan sitemap-bronnen klaar in
+`config/sources.example.json` (`werk_nl_sitemap`, `nationale_vacaturebank_sitemap`),
+standaard uit: verifieer eerst de juiste `sitemap_url` en `detail_bevat` op een
+machine die de site kan bereiken, en respecteer de actuele robots.txt.
 
 ## LinkedIn en Indeed — alleen handmatig
 

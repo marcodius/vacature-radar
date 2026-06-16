@@ -34,28 +34,33 @@
       "max_pages": 2,
       "delay_seconds": 10,
       "respect_robots_txt": true,
-      "stop_on_block": true
+      "stop_on_block": true,
+      "_reden_uit": "robots.txt staat vacatures toe, maar de pagina is volledig JavaScript-gerenderd; een statische scraper haalt er niets uit. Mogelijk later via sitemap, mits het vacaturedetail-URL-patroon bekend is."
     },
     "jobbird": {
-      "enabled": false,
+      "enabled": true,
       "type": "polite_scrape",
       "country": "NL",
       "priority": 6,
-      "base_url": "https://www.jobbird.com/nl/vacature/",
+      "mode": "sitemap",
+      "sitemap_url": "https://www.jobbird.com/nl/sitemaps/index.xml",
       "max_pages": 2,
       "delay_seconds": 10,
       "respect_robots_txt": true,
-      "stop_on_block": true
+      "stop_on_block": true,
+      "_uitleg": "robots.txt verbiedt de zoekpagina's (Disallow: /nl/vacature?*), maar staat de sitemap toe. We lezen vacature-URL's uit de sitemap (mode 'sitemap') en leiden de titel af uit de slug. Geen crawl van verboden zoekpagina's."
     },
     "randstad": {
-      "enabled": false,
+      "enabled": true,
       "type": "polite_scrape",
       "country": "NL",
       "priority": 7,
+      "query": "crm",
       "max_pages": 2,
       "delay_seconds": 10,
       "respect_robots_txt": true,
-      "stop_on_block": true
+      "stop_on_block": true,
+      "_uitleg": "robots.txt staat /vacatures/ toe en de statische HTML bevat echte vacaturelinks. 'query' = zoekterm (Randstad-parameter 'zoekterm')."
     },
     "youngcapital": {
       "enabled": false,
@@ -65,7 +70,36 @@
       "max_pages": 2,
       "delay_seconds": 10,
       "respect_robots_txt": true,
-      "stop_on_block": true
+      "stop_on_block": true,
+      "_reden_uit": "robots.txt verbiedt de relevante categorie-/zoekpagina's (o.a. /management-vacatures*, /commerciele-vacatures*, /ict-vacatures*, /zoeken?*). Sitemap-route mogelijk later, mits het vacaturedetail-URL-patroon bekend is (zelfde aanpak als Jobbird)."
+    },
+    "werk_nl_sitemap": {
+      "enabled": false,
+      "type": "polite_scrape",
+      "country": "NL",
+      "priority": 5,
+      "naam": "Werk.nl",
+      "sitemap_url": "https://www.werk.nl/nl/sitemap.xml",
+      "detail_bevat": "/vacature",
+      "max_pages": 2,
+      "delay_seconds": 10,
+      "respect_robots_txt": true,
+      "stop_on_block": true,
+      "_uitleg": "Gratis alternatief voor de Werk.nl Apify-actor: lees vacatures uit de Werk.nl-sitemap. VERIFIEER eerst de juiste sitemap_url en detail_bevat (welke URL's zijn vacaturedetailpagina's) op een machine die werk.nl kan bereiken; zet daarna 'enabled' op true."
+    },
+    "nationale_vacaturebank_sitemap": {
+      "enabled": false,
+      "type": "polite_scrape",
+      "country": "NL",
+      "priority": 1,
+      "naam": "Nationale Vacaturebank",
+      "sitemap_url": "https://www.nationalevacaturebank.nl/sitemap.xml",
+      "detail_bevat": "/vacature",
+      "max_pages": 2,
+      "delay_seconds": 10,
+      "respect_robots_txt": true,
+      "stop_on_block": true,
+      "_uitleg": "Gratis alternatief voor de NVB Apify-actor en de betaalde NVB-API: lees vacatures uit de NVB-sitemap. VERIFIEER eerst de juiste sitemap_url en detail_bevat op een machine die nationalevacaturebank.nl kan bereiken; zet daarna 'enabled' op true. Respecteert robots.txt bij elke run."
     },
     "linkedin_manual": {
       "enabled": true,
