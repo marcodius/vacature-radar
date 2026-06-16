@@ -1,75 +1,7 @@
-"""Provider voor Adzuna Nederland (extra bron, standaard uit in versie 1).
+"""Verplaatst naar providers/api/adzuna.py.
 
-Adzuna heeft een gratis API maar vereist een app-id en app-key. Die komen uit
-environment variables ADZUNA_APP_ID en ADZUNA_APP_KEY, nooit uit code.
-Documentatie: https://developer.adzuna.com/
+Dit bestand blijft alleen als verwijzing (kon in deze omgeving niet verwijderd
+worden). Verwijder het gerust lokaal met: git rm src/providers/adzuna.py
 """
 
-import os
-
-import requests
-
-NAAM = "Adzuna"
-
-API_URL = "https://api.adzuna.com/v1/api/jobs/nl/search/1"
-
-
-def _normaliseer(item):
-    company = item.get("company") or {}
-    location = item.get("location") or {}
-    return {
-        "titel": item.get("title") or "Onbekende functie",
-        "bedrijf": company.get("display_name") or "Onbekend bedrijf",
-        "locatie": location.get("display_name") or "Onbekend",
-        "url": item.get("redirect_url") or "",
-        "omschrijving": item.get("description") or "",
-        "datum": (item.get("created") or "")[:10],
-        "bron": NAAM,
-    }
-
-
-def fetch(config):
-    """Haal vacatures op. config is het 'adzuna'-blok uit sources.json."""
-    max_resultaten = config.get("max_resultaten", 50)
-
-    app_id = os.environ.get("ADZUNA_APP_ID")
-    app_key = os.environ.get("ADZUNA_APP_KEY")
-    if not app_id or not app_key:
-        print(
-            "[Adzuna] ADZUNA_APP_ID en/of ADZUNA_APP_KEY ontbreken in environment. "
-            "Bron wordt overgeslagen."
-        )
-        return []
-
-    # 'trefwoorden' mag string of lijst zijn; per term een zoekopdracht.
-    trefwoorden = config.get("trefwoorden", "")
-    if isinstance(trefwoorden, str):
-        trefwoorden = [trefwoorden] if trefwoorden else [""]
-    locatie = config.get("locatie", "")
-
-    gezien = set()
-    resultaat = []
-    for what in trefwoorden:
-        params = {
-            "app_id": app_id,
-            "app_key": app_key,
-            "results_per_page": max_resultaten,
-            "content-type": "application/json",
-        }
-        if what:
-            params["what"] = what
-        if locatie:
-            params["where"] = locatie
-        try:
-            response = requests.get(API_URL, params=params, timeout=30)
-            response.raise_for_status()
-            for item in (response.json().get("results") or []):
-                v = _normaliseer(item)
-                if v["url"] and v["url"] in gezien:
-                    continue
-                gezien.add(v["url"])
-                resultaat.append(v)
-        except Exception as fout:  # noqa: BLE001
-            print(f"[Adzuna] Zoekterm '{what}' mislukt: {fout}. Overslaan.")
-
-    return resultaat[:max_resultaten]
+from providers.api.adzuna import *  # noqa: F401,F403

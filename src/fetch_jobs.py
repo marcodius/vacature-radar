@@ -1,8 +1,20 @@
 """Stap 1: vacatures ophalen uit alle ingeschakelde bronnen.
 
-Leest config/sources.json (of het example-bestand als die er niet is),
-roept elke ingeschakelde provider aan en schrijft de ruwe vacatures naar
-data/jobs_raw.json.
+Leest config/sources.json (of het example-bestand) volgens dit schema:
+
+    {
+      "sources": {
+        "<bronsleutel>": {
+          "enabled": true/false,
+          "type": "api" | "polite_scrape" | "manual",
+          "priority": <int>,
+          ... bron-specifieke opties ...
+        }
+      }
+    }
+
+Bronnen worden in volgorde van 'priority' opgehaald via de provider_registry en
+samengevoegd in data/jobs_raw.json.
 
 Gebruik:  python src/fetch_jobs.py
 """
@@ -10,36 +22,14 @@ Gebruik:  python src/fetch_jobs.py
 import json
 import os
 
-from providers import (
-    adzuna,
-    arbeitnow,
-    jobicy,
-    jooble,
-    manual_links,
-    nationale_vacaturebank,
-    overheid,
-    rss,
-)
+from providers.provider_registry import get_provider
 
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CONFIG_DIR = os.path.join(PROJECT_DIR, "config")
 DATA_DIR = os.path.join(PROJECT_DIR, "data")
 
-# Koppel de naam uit sources.json aan de provider-module.
-PROVIDERS = {
-    "nationale_vacaturebank": nationale_vacaturebank,
-    "overheid": overheid,
-    "adzuna": adzuna,
-    "jooble": jooble,
-    "jobicy": jobicy,
-    "rss": rss,
-    "arbeitnow": arbeitnow,
-    "manual_links": manual_links,
-}
-
 
 def laad_config(naam):
-    """Laad een config-bestand; val terug op het .example-bestand."""
     pad = os.path.join(CONFIG_DIR, naam)
     example = os.path.join(CONFIG_DIR, naam.replace(".json", ".example.json"))
     if not os.path.exists(pad) and os.path.exists(example):
@@ -50,17 +40,27 @@ def laad_config(naam):
 
 
 def main():
-    sources = laad_config("sources.json")
+    config = laad_config("sources.json")
+    sources = config.get("sources", config)  # ondersteun ook plat schema
+
+    # Sorteer op priority (lager = eerst).
+    gesorteerd = sorted(
+        sources.items(), key=lambda kv: kv[1].get("priority", 999)
+    )
 
     alle_vacatures = []
-    for naam, module in PROVIDERS.items():
-        bron_config = sources.get(naam, {})
-        if not bron_config.get("aan", False):
-            print(f"[fetch] Bron '{naam}' staat uit, overslaan.")
+    for bron_key, bron_config in gesorteerd:
+        if not bron_config.get("enabled", False):
+            print(f"[fetch] Bron '{bron_key}' staat uit, overslaan.")
             continue
-        print(f"[fetch] Ophalen uit '{naam}'...")
-        vacatures = module.fetch(bron_config)
-        print(f"[fetch] {len(vacatures)} vacatures uit '{naam}'.")
+        provider = get_provider(bron_key)
+        if provider is None:
+            print(f"[fetch] Geen provider voor '{bron_key}', overslaan.")
+            continue
+        print(f"[fetch] Ophalen uit '{bron_key}' (type {bron_config.get('type', '?')})...")
+        # Geef de bronsleutel mee (manual-providers gebruiken die om te filteren).
+        vacatures = provider.fetch({**bron_config, "_key": bron_key})
+        print(f"[fetch] {len(vacatures)} vacatures uit '{bron_key}'.")
         alle_vacatures.extend(vacatures)
 
     os.makedirs(DATA_DIR, exist_ok=True)

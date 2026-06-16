@@ -1,10 +1,18 @@
 [
   {
-    "titel": "Voorbeeld: Python Developer",
-    "bedrijf": "Voorbeeld B.V.",
-    "locatie": "Amsterdam",
+    "source": "linkedin_manual",
+    "title": "Business Development Manager SaaS",
+    "company": "Voorbeeld BV",
+    "location": "Amsterdam / Hybride",
     "url": "https://www.linkedin.com/jobs/view/0000000000",
-    "omschrijving": "Korte omschrijving die je zelf invult. Trefwoorden hierin tellen mee voor de score.",
-    "bron": "LinkedIn (handmatig)"
+    "notes": "Handmatig toegevoegd"
+  },
+  {
+    "source": "indeed_manual",
+    "title": "Accountmanager Tech",
+    "company": "Voorbeeld BV",
+    "location": "Utrecht",
+    "url": "https://nl.indeed.com/viewjob?jk=...",
+    "notes": "Handmatig toegevoegd"
   }
 ]

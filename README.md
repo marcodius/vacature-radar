@@ -36,36 +36,52 @@ Open daarna `public/index.html` in je browser.
 > Tip: de scripts werken ook zonder eigen config — dan gebruiken ze automatisch
 > de `.example`-bestanden.
 
+## Projectstructuur
+
+```
+src/providers/
+  api/        nationale_vacaturebank, vacatures_overheid, jooble, adzuna
+  scrape/     werk_nl, jobbird, randstad, youngcapital (+ _polite helper)
+  manual/     manual_links (LinkedIn + Indeed, handmatig)
+  provider_registry.py   koppelt bronsleutel -> provider
+src/fetch_jobs.py / score_jobs.py / render_site.py
+config/   sources.example.json, profile(.kevin).example.json
+docs/     source_policy.md
+```
+
+Elke provider biedt `fetch(config) -> list[dict]` met velden `titel`, `bedrijf`,
+`locatie`, `url`, `omschrijving`, `datum`, `bron`. Een bron toevoegen = één regel
+in `provider_registry.py` plus een blok in `config/sources.json`.
+
 ## Bronnen
 
-Bronnen staan in `config/sources.json` en kun je per stuk aan- of uitzetten met
-`"aan": true/false`.
+Bronnen staan in `config/sources.json` onder `"sources"`. Per bron: `enabled`
+(aan/uit), `type` (`api` / `polite_scrape` / `manual`) en `priority`
+(ophaalvolgorde). Het volledige bronbeleid staat in
+[`docs/source_policy.md`](docs/source_policy.md).
 
-- **Nationale Vacaturebank** (primaire bron). De Nationale Vacaturebank heeft
-  geen gratis openbare API; officiele toegang loopt via een API-sleutel die je
-  met een account aanvraagt. Daarom staat de bron standaard op `"gebruik_mock": true`
-  en levert hij voorbeeldvacatures, zodat de pijplijn meteen werkt. Heb je echte
-  toegang? Zet `gebruik_mock` op `false` en lever de sleutel via de environment
-  variable `NVB_API_KEY`.
-- **Adzuna Nederland** (fase 2, uit). Brede NL-dekking. Vereist `ADZUNA_APP_ID`
-  en `ADZUNA_APP_KEY` (gratis account via https://developer.adzuna.com/). Zet
-  `"aan": true` zodra je de sleutels hebt; zonder sleutels wordt de bron
-  automatisch overgeslagen. `trefwoorden` mag een lijst zijn.
-- **Jooble** (fase 2, uit). Gratis REST-API; vraag een sleutel aan en zet die in
-  `JOOBLE_API_KEY`. Zet `"aan": true` zodra je de sleutel hebt.
-- **Overheid (CSO Vacature API)** (fase 2, uit). Overheidsvacatures van
-  WerkenvoorNederland e.a. Gratis open data (CC-0), maar vereist een API-sleutel
-  (`CSO_API_KEY`) uit een gratis account. Documentatie: https://docs.api.cso20.net/
-- **RSS-feeds** (aan). Leest officiele RSS/Atom-feeds die boards zelf publiceren
-  — geen scraping. Voorgeconfigureerd met 5 Resumo-feeds (ICT/management) waarvan
-  je per functie nog de echte URL invult in `config/sources.json`; placeholder-URL's
-  worden automatisch overgeslagen. Werkt voor elk board met een eigen feed.
-- **Jobicy** (aan). Gratis remote-jobs API zonder sleutel. Internationaal/remote;
-  we filteren lokaal op CRM/operations/SaaS-trefwoorden (`post_filter_keywords`).
-  Bronvermelding "Jobicy" is verplicht en zit in de output.
-- **Arbeitnow** (fase 2, uit). Gratis API zonder sleutel.
-- **Handmatige links** (bijv. LinkedIn). Voeg zelf vacatures toe in
-  `data/manual_links.json`. LinkedIn wordt **niet** gescrapet.
+**API-bronnen** (sleutels via environment variables / GitHub Secrets; zonder
+sleutel wordt de bron netjes overgeslagen):
+
+- **Nationale Vacaturebank** — `NVB_API_KEY`.
+- **Vacatures Overheid (CSO)** — `CSO_API_KEY`. Docs: https://docs.api.cso20.net/
+- **Jooble NL** — `JOOBLE_API_KEY`.
+- **Adzuna NL** — `ADZUNA_APP_ID` + `ADZUNA_APP_KEY` (https://developer.adzuna.com/).
+
+**Polite scrape-bronnen** (standaard uit; volgen de regels in
+`docs/source_policy.md`: robots.txt, max 2 pagina's, 10s delay, caching, stop bij
+blokkade, geen stealth/login):
+
+- **Werk.nl**, **Jobbird** (via `jobbird.com/nl/vacature/`), **Randstad**,
+  **YoungCapital**.
+
+**Manual-only bronnen** (nooit scrapen; geen requests naar deze platforms):
+
+- **LinkedIn** en **Indeed** — voeg vacatures handmatig toe in
+  `data/manual_links.json` met `source` `linkedin_manual` of `indeed_manual`.
+
+> Monsterboard is verwijderd: Monster Nederland is failliet en geen bruikbare
+> bron meer.
 
 ## API-sleutels
 

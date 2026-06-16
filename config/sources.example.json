@@ -1,86 +1,81 @@
 {
-  "_volgorde": "Versie 1: echte bronnen. RSS (Resumo) + Jobicy + Adzuna + Jooble + handmatige LinkedIn-links AAN. Mock (Nationale Vacaturebank) UIT. Overheid en Arbeitnow UIT (fase 2). Adzuna/Jooble worden automatisch overgeslagen zolang hun sleutels (GitHub Secrets) ontbreken.",
+  "_uitleg": "Bronnen voor Vacature Radar. type: api | polite_scrape | manual. 'enabled' zet een bron aan/uit; 'priority' bepaalt de ophaalvolgorde (laag = eerst). API-bronnen vereisen sleutels via environment variables / GitHub Secrets en worden zonder sleutel netjes overgeslagen. Scrape-bronnen volgen docs/source_policy.md en staan standaard uit. LinkedIn en Indeed zijn manual-only: nooit scrapen, alleen via data/manual_links.json.",
 
-  "rss": {
-    "aan": true,
-    "max_resultaten": 50,
-    "feeds": [
-      {"naam": "Resumo - CRM Specialist", "url": "PLAATS_HIER_RESUMO_RSS_URL_CRM_SPECIALIST"},
-      {"naam": "Resumo - Salesforce Administrator", "url": "PLAATS_HIER_RESUMO_RSS_URL_SALESFORCE_ADMINISTRATOR"},
-      {"naam": "Resumo - Revenue Operations", "url": "PLAATS_HIER_RESUMO_RSS_URL_REVENUE_OPERATIONS"},
-      {"naam": "Resumo - Sales Operations", "url": "PLAATS_HIER_RESUMO_RSS_URL_SALES_OPERATIONS"},
-      {"naam": "Resumo - Projectcoördinator", "url": "PLAATS_HIER_RESUMO_RSS_URL_PROJECTCOORDINATOR"}
-    ],
-    "_uitleg": "Generieke RSS-provider voor o.a. Resumo. Vul per functie de echte RSS-URL in (kopieer van vacatures.resumo.nl). Placeholder-URL's (PLAATS_HIER...) worden automatisch overgeslagen. Geen scraping: dit zijn officiele feeds."
-  },
-
-  "jobicy": {
-    "aan": true,
-    "max_resultaten": 50,
-    "post_filter_keywords": [
-      "CRM",
-      "Salesforce",
-      "HubSpot",
-      "Revenue Operations",
-      "RevOps",
-      "Sales Operations",
-      "Business Operations",
-      "Customer Success",
-      "Operations Specialist",
-      "SaaS"
-    ],
-    "_uitleg": "Jobicy gratis remote-jobs API (geen sleutel). Internationaal/remote; we filteren lokaal op CRM/operations/SaaS-trefwoorden. Bronvermelding 'Jobicy' verplicht."
-  },
-
-  "manual_links": {
-    "aan": true,
-    "_uitleg": "Handmatig toegevoegde links (bijv. LinkedIn) uit data/manual_links.json. Geen scraping."
-  },
-
-  "nationale_vacaturebank": {
-    "aan": false,
-    "max_resultaten": 50,
-    "gebruik_mock": true,
-    "_uitleg": "UIT: de mock-voorbeelddata is uitgeschakeld. Zet 'aan' op true en gebruik_mock op false zodra je echte NVB_API_KEY hebt; of zet alleen gebruik_mock op true om de voorbeelddata weer te tonen."
-  },
-
-  "overheid": {
-    "aan": false,
-    "max_resultaten": 50,
-    "gebruik_mock": true,
-    "_uitleg": "Fase 2. Overheidsvacatures via CSO Vacature API (WerkenvoorNederland). Gratis open data, maar vereist CSO_API_KEY uit een account."
-  },
-
-  "adzuna": {
-    "aan": true,
-    "max_resultaten": 30,
-    "trefwoorden": [
-      "Salesforce CRM HubSpot",
-      "Revenue Operations RevOps Sales Operations",
-      "Customer Success Operations Business Operations",
-      "Projectcoördinator Implementatie Specialist"
-    ],
-    "locatie": "",
-    "_uitleg": "AAN. Adzuna Nederland; vereist ADZUNA_APP_ID en ADZUNA_APP_KEY (gratis account, als GitHub Secrets). Zonder sleutels wordt de bron automatisch overgeslagen. 'trefwoorden' mag een lijst zijn; per term wordt gezocht."
-  },
-
-  "jooble": {
-    "aan": true,
-    "max_resultaten": 30,
-    "trefwoorden": [
-      "CRM Specialist",
-      "Salesforce beheerder",
-      "Revenue Operations Specialist",
-      "Operations Specialist",
-      "Projectcoördinator"
-    ],
-    "locatie": "Nederland",
-    "_uitleg": "AAN. Jooble; vereist JOOBLE_API_KEY (gratis sleutel, als GitHub Secret). Zonder sleutel wordt de bron automatisch overgeslagen. 'trefwoorden' mag een lijst zijn."
-  },
-
-  "arbeitnow": {
-    "aan": false,
-    "max_resultaten": 50,
-    "_uitleg": "Fase 2 / optioneel. Gratis bron zonder sleutel, maar vooral Duitse jobs."
+  "sources": {
+    "nationale_vacaturebank": {
+      "enabled": true,
+      "type": "api",
+      "country": "NL",
+      "priority": 1
+    },
+    "vacatures_overheid": {
+      "enabled": true,
+      "type": "api",
+      "country": "NL",
+      "priority": 2
+    },
+    "jooble": {
+      "enabled": true,
+      "type": "api",
+      "country": "NL",
+      "priority": 3
+    },
+    "adzuna": {
+      "enabled": true,
+      "type": "api",
+      "country": "NL",
+      "priority": 4
+    },
+    "werk_nl": {
+      "enabled": false,
+      "type": "polite_scrape",
+      "country": "NL",
+      "priority": 5,
+      "max_pages": 2,
+      "delay_seconds": 10,
+      "respect_robots_txt": true,
+      "stop_on_block": true
+    },
+    "jobbird": {
+      "enabled": false,
+      "type": "polite_scrape",
+      "country": "NL",
+      "priority": 6,
+      "base_url": "https://www.jobbird.com/nl/vacature/",
+      "max_pages": 2,
+      "delay_seconds": 10,
+      "respect_robots_txt": true,
+      "stop_on_block": true
+    },
+    "randstad": {
+      "enabled": false,
+      "type": "polite_scrape",
+      "country": "NL",
+      "priority": 7,
+      "max_pages": 2,
+      "delay_seconds": 10,
+      "respect_robots_txt": true,
+      "stop_on_block": true
+    },
+    "youngcapital": {
+      "enabled": false,
+      "type": "polite_scrape",
+      "country": "NL",
+      "priority": 8,
+      "max_pages": 2,
+      "delay_seconds": 10,
+      "respect_robots_txt": true,
+      "stop_on_block": true
+    },
+    "linkedin_manual": {
+      "enabled": true,
+      "type": "manual",
+      "priority": 9
+    },
+    "indeed_manual": {
+      "enabled": true,
+      "type": "manual",
+      "priority": 10
+    }
   }
 }
