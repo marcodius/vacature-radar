@@ -1,5 +1,5 @@
 {
-  "_volgorde": "Versie 1 (lean): Resumo (RSS) + Jobicy + handmatige LinkedIn-links AAN. Nationale Vacaturebank draait op mock zodat de pijplijn werkt. Adzuna, Jooble, overheid, Arbeitnow staan UIT (fase 2).",
+  "_volgorde": "Versie 1: echte bronnen. RSS (Resumo) + Jobicy + Adzuna + Jooble + handmatige LinkedIn-links AAN. Mock (Nationale Vacaturebank) UIT. Overheid en Arbeitnow UIT (fase 2). Adzuna/Jooble worden automatisch overgeslagen zolang hun sleutels (GitHub Secrets) ontbreken.",
 
   "rss": {
     "aan": true,
@@ -38,10 +38,10 @@
   },
 
   "nationale_vacaturebank": {
-    "aan": true,
+    "aan": false,
     "max_resultaten": 50,
     "gebruik_mock": true,
-    "_uitleg": "Draait op mock-voorbeelddata zolang er geen API-toegang is, zodat de pijplijn altijd iets oplevert. Zet gebruik_mock op false zodra je NVB_API_KEY hebt, of zet 'aan' op false om de mock uit te schakelen."
+    "_uitleg": "UIT: de mock-voorbeelddata is uitgeschakeld. Zet 'aan' op true en gebruik_mock op false zodra je echte NVB_API_KEY hebt; of zet alleen gebruik_mock op true om de voorbeelddata weer te tonen."
   },
 
   "overheid": {
@@ -52,7 +52,7 @@
   },
 
   "adzuna": {
-    "aan": false,
+    "aan": true,
     "max_resultaten": 30,
     "trefwoorden": [
       "Salesforce CRM HubSpot",
@@ -61,11 +61,11 @@
       "Projectcoördinator Implementatie Specialist"
     ],
     "locatie": "",
-    "_uitleg": "Fase 2. Adzuna Nederland; vereist ADZUNA_APP_ID en ADZUNA_APP_KEY (gratis account). 'trefwoorden' mag een lijst zijn; per term wordt gezocht."
+    "_uitleg": "AAN. Adzuna Nederland; vereist ADZUNA_APP_ID en ADZUNA_APP_KEY (gratis account, als GitHub Secrets). Zonder sleutels wordt de bron automatisch overgeslagen. 'trefwoorden' mag een lijst zijn; per term wordt gezocht."
   },
 
   "jooble": {
-    "aan": false,
+    "aan": true,
     "max_resultaten": 30,
     "trefwoorden": [
       "CRM Specialist",
@@ -75,7 +75,7 @@
       "Projectcoördinator"
     ],
     "locatie": "Nederland",
-    "_uitleg": "Fase 2. Jooble; vereist JOOBLE_API_KEY (gratis sleutel). 'trefwoorden' mag een lijst zijn."
+    "_uitleg": "AAN. Jooble; vereist JOOBLE_API_KEY (gratis sleutel, als GitHub Secret). Zonder sleutel wordt de bron automatisch overgeslagen. 'trefwoorden' mag een lijst zijn."
   },
 
   "arbeitnow": {
