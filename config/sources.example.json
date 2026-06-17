@@ -705,6 +705,19 @@
         {"naam": "bunq", "platform": "recruitee", "board": "bunq"},
         {"naam": "Nmbrs", "platform": "recruitee", "board": "nmbrs"},
         {"naam": "Vandebron", "platform": "recruitee", "board": "vandebron"}
+      ],
+      "_watchlist_uitleg": "Gevette werkgevers met publiek ATS op goede locaties die nu (nog) weinig matchen; ze draaien dagelijks mee en verschijnen vanzelf zodra er een passende operations/support-rol opengaat. Check een nieuwe kandidaat met tools/check_werkgever.py en promoveer 'm desgewenst naar 'werkgevers'.",
+      "watchlist": [
+        {"naam": "Floryn", "platform": "recruitee", "board": "floryn"},
+        {"naam": "BridgeFund", "platform": "recruitee", "board": "bridgefund"},
+        {"naam": "Crisp", "platform": "greenhouse", "board": "crisp"},
+        {"naam": "Luminis", "platform": "recruitee", "board": "luminis"},
+        {"naam": "Incentro", "platform": "recruitee", "board": "incentro"},
+        {"naam": "Bloomon", "platform": "lever", "board": "bloomon"},
+        {"naam": "Sympower", "platform": "recruitee", "board": "sympower"},
+        {"naam": "Surfly", "platform": "recruitee", "board": "surfly"},
+        {"naam": "Picnic", "platform": "smartrecruiters", "board": "picnic"},
+        {"naam": "Virtuagym", "platform": "smartrecruiters", "board": "virtuagym"}
       ]
     },
     "rss": {

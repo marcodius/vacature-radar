@@ -82,6 +82,12 @@ Dat probeert alle platforms en print de toe-te-voegen regel. Grote corporates
 (Rabobank, ASR, ABN, ING) hebben géén toegankelijk publiek ATS (maatwerk-JS,
 geen JSON-LD); hun vacatures komen al binnen via de aggregator-bronnen.
 
+Naast `werkgevers` (de vaste set) leest `ats_bedrijven` ook een `watchlist`:
+gevette kandidaten die dagelijks automatisch meedraaien. Ze leveren niets zolang
+er geen passende rol open staat, en verschijnen vanzelf zodra dat wel zo is —
+dat is de periodieke auto-check. Promoveer een watchlist-bedrijf naar
+`werkgevers` als het structureel goede matches geeft.
+
 ## Belangrijke regels
 
 - Scraping is toegestaan voor publiek toegankelijke vacaturepagina's, inclusief LinkedIn/Indeed wanneer daarvoor een provider is ingericht.

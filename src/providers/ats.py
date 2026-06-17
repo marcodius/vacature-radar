@@ -111,7 +111,11 @@ PLATFORMS = {
 
 
 def fetch(config):
-    werkgevers = config.get("werkgevers", [])
+    # 'werkgevers' = vaste set; 'watchlist' = kandidaten die we dagelijks
+    # automatisch meenemen. Beide gaan door dezelfde relevantie-/locatiefilter,
+    # dus een werkgever zonder passende rol levert vanzelf niets op; zodra er wel
+    # een match is, verschijnt die automatisch.
+    werkgevers = list(config.get("werkgevers", [])) + list(config.get("watchlist", []))
     limiet = int(config.get("max_resultaten_per_werkgever", 100))
     if not werkgevers:
         print("[ATS] Geen werkgevers geconfigureerd. Bron wordt overgeslagen.")
