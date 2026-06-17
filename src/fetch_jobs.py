@@ -77,6 +77,10 @@ def main():
         print(f"[fetch] Ophalen uit '{bron_key}' (type {bron_config.get('type', '?')})...")
         # Geef de bronsleutel mee (manual-providers gebruiken die om te filteren).
         vacatures = provider.fetch({**bron_config, "_key": bron_key})
+        # Categorie: 'vacaturesite' (job board) of 'bedrijf' (werkgever direct).
+        categorie = bron_config.get("categorie", "vacaturesite")
+        for vacature in vacatures:
+            vacature.setdefault("categorie", categorie)
         print(f"[fetch] {len(vacatures)} vacatures uit '{bron_key}'.")
         alle_vacatures.extend(vacatures)
 

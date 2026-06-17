@@ -175,9 +175,14 @@ def vacature_html(v, vandaag):
 
     hybride = v.get("hybride")
     hybride_attr = "true" if hybride is True else ("false" if hybride is False else "onbekend")
+    categorie = v.get("categorie", "vacaturesite")
 
     # Kenmerk-chips: alleen tonen wat we echt weten (geen ruis).
-    chips = [chip(v.get("profiel"), "chip chip-profiel")] if v.get("profiel") else []
+    chips = []
+    if categorie == "bedrijf":
+        chips.append(chip("🏢 Werkgever", "chip chip-bedrijf", titel="Rechtstreeks van de werkgever"))
+    if v.get("profiel"):
+        chips.append(chip(v.get("profiel"), "chip chip-profiel"))
     if locatie and locatie.lower() not in GENERIEK_LOCATIE:
         chips.append(chip("📍 " + locatie))
     if hybride is True:
@@ -226,6 +231,7 @@ def vacature_html(v, vandaag):
     return f"""
     <article class="vacature" data-score="{score}" data-laag="{laag}"
       data-profiel="{e(v.get('profiel'))}" data-bron="{e(bron)}"
+      data-categorie="{e(categorie)}"
       data-hybride="{hybride_attr}" data-datum="{e(datum_iso)}" data-zoek="{zoek}">
       <div class="kop">
         <span class="score" style="--kleur:{kleur}" title="{e(label)}">{score}</span>
@@ -299,6 +305,11 @@ def main():
     filterbalk = f"""
     <div class="filters">
       <input type="search" id="zoek" placeholder="Zoek op functie, bedrijf of plaats&hellip;" aria-label="Zoeken">
+      <select id="f-type" aria-label="Type bron">
+        <option value="">Alle types</option>
+        <option value="vacaturesite">Vacaturesites</option>
+        <option value="bedrijf">Bedrijven</option>
+      </select>
       <select id="f-profiel" aria-label="Zoekprofiel"><option value="">Alle zoekprofielen</option>{profiel_opties}</select>
       <select id="f-bron" aria-label="Bron"><option value="">Alle bronnen</option>{bron_opties}</select>
       <select id="f-sort" aria-label="Sorteren">
@@ -361,6 +372,7 @@ def main():
       border-radius: 999px; padding: 0.15rem 0.6rem; color: #333; white-space: nowrap; }}
     .chip-profiel {{ background: #eaf2fb; border-color: #cfe0f5; color: #0b4a8a; white-space: normal; }}
     .chip-hybride {{ background: #e7f6ec; border-color: #c6ecd3; color: #1a7f37; }}
+    .chip-bedrijf {{ background: #f3eefb; border-color: #e0d3f5; color: #6b3fa0; }}
 
     details.match {{ margin: 0.7rem 0 0; }}
     details.match > summary {{ cursor: pointer; font-size: 0.88rem; font-weight: 600; color: #444; }}
@@ -403,6 +415,7 @@ def main():
   <script>
     (function () {{
       var q = document.getElementById('zoek');
+      var fType = document.getElementById('f-type');
       var fProfiel = document.getElementById('f-profiel');
       var fBron = document.getElementById('f-bron');
       var fHybride = document.getElementById('f-hybride');
@@ -414,12 +427,13 @@ def main():
 
       function pas() {{
         var term = (q.value || '').toLowerCase().trim();
-        var prof = fProfiel.value, bron = fBron.value;
+        var prof = fProfiel.value, bron = fBron.value, type = fType.value;
         var alleenHy = fHybride.checked, toonLaag = fLaag.checked;
         var zichtbaar = 0;
         kaarten.forEach(function (k) {{
           var ok = true;
           if (term && k.dataset.zoek.indexOf(term) === -1) ok = false;
+          if (type && k.dataset.categorie !== type) ok = false;
           if (prof && k.dataset.profiel !== prof) ok = false;
           if (bron && k.dataset.bron !== bron) ok = false;
           if (alleenHy && k.dataset.hybride !== 'true') ok = false;
@@ -437,7 +451,7 @@ def main():
         gesorteerd.forEach(function (k) {{ lijst.appendChild(k); }});
       }}
 
-      [q, fProfiel, fBron, fHybride, fLaag, fSort].forEach(function (el) {{
+      [q, fType, fProfiel, fBron, fHybride, fLaag, fSort].forEach(function (el) {{
         el.addEventListener('input', pas);
         el.addEventListener('change', pas);
       }});

@@ -692,6 +692,7 @@
     "ats_bedrijven": {
       "enabled": true,
       "type": "api",
+      "categorie": "bedrijf",
       "priority": 19,
       "max_resultaten_per_werkgever": 150,
       "_uitleg": "Losse grote werkgevers via hun ATS-API (greenhouse/recruitee/lever/smartrecruiters). 'board' is de identifier in de ATS-URL. Locatie komt uit de API, dus de strikte locatiefilter houdt de vacatures in een zoekgebied over. Werkende boards geverifieerd juni 2026; voeg gerust werkgevers toe.",
