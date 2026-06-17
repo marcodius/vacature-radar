@@ -30,8 +30,9 @@ PUBLIC_DIR = os.path.join(PROJECT_DIR, "public")
 
 DREMPEL = 50  # score waarboven een vacature standaard als topmatch telt
 
-# De fetch draait dagelijks via GitHub Actions cron "0 6 * * *" (UTC).
+# De fetch draait dagelijks via GitHub Actions cron "17 6 * * *" (UTC).
 FETCH_CRON_UUR_UTC = 6
+FETCH_CRON_MINUUT_UTC = 17
 WEEKDAGEN = ["maandag", "dinsdag", "woensdag", "donderdag", "vrijdag",
              "zaterdag", "zondag"]
 MAANDEN = ["januari", "februari", "maart", "april", "mei", "juni", "juli",
@@ -44,7 +45,8 @@ def _naar_amsterdam(dt_utc):
 
 def _volgende_ronde(nu_utc):
     """Eerstvolgende geplande fetch (06:00 UTC), in Amsterdamse tijd."""
-    volgende = nu_utc.replace(hour=FETCH_CRON_UUR_UTC, minute=0, second=0, microsecond=0)
+    volgende = nu_utc.replace(hour=FETCH_CRON_UUR_UTC, minute=FETCH_CRON_MINUUT_UTC,
+                              second=0, microsecond=0)
     if volgende <= nu_utc:
         volgende += datetime.timedelta(days=1)
     return _naar_amsterdam(volgende)

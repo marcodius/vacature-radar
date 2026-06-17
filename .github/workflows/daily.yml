@@ -2,8 +2,11 @@ name: Dagelijkse vacatures
 
 on:
   schedule:
-    # Elke dag om 06:00 UTC (ongeveer 07:00/08:00 NL-tijd).
-    - cron: "0 6 * * *"
+    # Dagelijks rond 06:17 UTC (~07:17 winter / 08:17 zomer, NL-tijd). Bewust
+    # NIET op het hele uur: GitHub stelt cron-runs op :00 vaker uit of slaat ze
+    # over (piekdrukte). Een off-peak minuut is betrouwbaarder. GitHub garandeert
+    # de tijd sowieso niet exact; workflow_dispatch blijft als handmatige trigger.
+    - cron: "17 6 * * *"
   workflow_dispatch: {}
   push:
     branches: [main]
