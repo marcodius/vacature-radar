@@ -24,11 +24,19 @@ from . import _polite
 class BrowserRenderer:
     """Headless-browser renderer met cache, delay en nette fallback."""
 
+    # Realistische desktop-UA i.p.v. de default 'HeadlessChrome' (die sites als
+    # Indeed blokkeren).
+    STANDAARD_UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/126.0.0.0 Safari/537.36")
+
     def __init__(self, bron, config):
         self.bron = bron
         self.delay = max(0, float(config.get("delay_seconds", 0)))
         self.timeout = int(config.get("render_timeout_ms", 30000))
         self.wait = config.get("render_wait", "networkidle")
+        self.user_agent = config.get("user_agent") or self.STANDAARD_UA
+        self.locale = config.get("render_locale", "nl-NL")
         self._pw = None
         self._browser = None
         self._page = None
@@ -46,8 +54,14 @@ class BrowserRenderer:
             return False
         try:
             self._pw = sync_playwright().start()
-            self._browser = self._pw.chromium.launch()
-            self._page = self._browser.new_page()
+            self._browser = self._pw.chromium.launch(
+                args=["--disable-blink-features=AutomationControlled"]
+            )
+            self._page = self._browser.new_page(
+                user_agent=self.user_agent,
+                locale=self.locale,
+                viewport={"width": 1280, "height": 900},
+            )
             self._beschikbaar = True
         except Exception as fout:  # noqa: BLE001
             print(f"[{self.bron}] Browser starten mislukt ({fout}); JS-verrijking overgeslagen.")

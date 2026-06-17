@@ -60,9 +60,12 @@ via een headless browser (Playwright, `render_js: true`, zie `scrape/_browser.py
 verrijkt. Jobbird zet géén omschrijving in zijn JSON-LD, maar wél locatie,
 bedrijf en salaris (`baseSalary`, genormaliseerd naar bruto/maand in
 `extraheer_detail_velden`). De betrouwbaarste matchbronnen zijn de API's (Adzuna,
-Jooble) en de server-gerenderde sitemaps. Indeed blijft onbruikbaar: geen
-sitemap, en de zoekpagina's hebben geen JSON-LD plus actieve anti-bot tegen
-datacenter-IP's (GitHub-runners).
+Jooble) en de server-gerenderde sitemaps. Indeed draait best-effort via de
+headless browser (`scrape/indeed.py`): de zoekpagina heeft geen JSON-LD maar wel
+een ingebed `mosaic-provider-jobcards`-JSON-blok dat we parsen. Indeed blokkeert
+datacenter-IP's actiever dan residentiële, dus in CI kan Indeed 0 opleveren —
+dan blijft handmatige import (`data/manual_links.json`) de fallback. De
+headless browser gebruikt een realistische user-agent (geen 'HeadlessChrome').
 
 ## Belangrijke regels
 
@@ -77,12 +80,13 @@ datacenter-IP's (GitHub-runners).
 
 Actieve bronnen: NVB-/WerkenvoorNederland-/WerkenbijdeOverheid-/Jobbird-sitemaps,
 Tempo-Team- en Magnet.me-sitemaps, Randstad, YoungCapital, LinkedIn (vaak 429),
-Talent.com, Jobrapido, en de API's Jooble + Adzuna (per zoekgebied × zoekterm,
-sleutels via Secrets). Extra gratis API's Arbeitnow en Jobicy staan aan (weinig NL-rendement
+Talent.com, Jobrapido, Indeed (best-effort via headless browser), en de API's
+Jooble + Adzuna (per zoekgebied × zoekterm, sleutels via Secrets). Extra gratis API's Arbeitnow en Jobicy staan aan (weinig NL-rendement
 onder de strikte locatieregel). RSS staat uit tot er echte feed-URL's zijn
-ingevuld. Geblokkeerd/uit: werk.nl, Indeed, SimplyHired (anti-bot/Cloudflare) en
-Joblift (404, gewijzigde URL-structuur) — voor LinkedIn/Indeed blijft handmatige
-import (`data/manual_links.json`) de fallback.
+ingevuld. Geblokkeerd/uit: werk.nl, SimplyHired (anti-bot/Cloudflare) en Joblift (404,
+gewijzigde URL-structuur). Voor LinkedIn/Indeed blijft handmatige import
+(`data/manual_links.json`) de fallback als de geautomatiseerde route geblokkeerd
+wordt.
 
 Alle brede bronnen draaien door de relevantie-voorfilter, zodat alleen
 vakgebied-relevante vacatures de scoringsstap bereiken.

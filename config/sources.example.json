@@ -336,34 +336,24 @@
       "type": "polite_scrape",
       "country": "NL",
       "priority": 10,
-      "query": "crm",
-      "location": "Nederland",
+      "naam": "Indeed",
+      "base_url": "https://nl.indeed.com/jobs",
       "radius": 25,
       "max_pages": 1,
-      "delay_seconds": 0.2,
+      "delay_seconds": 1.0,
       "respect_robots_txt": false,
-      "stop_on_block": true,
-      "detect_block_html": false,
-      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
-      "headers": {
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-        "Accept-Language": "nl-NL,nl;q=0.9,en-US;q=0.8,en;q=0.7",
-        "Referer": "https://nl.indeed.com/"
-      },
-      "_uitleg": "Publieke Indeed zoekresultaatpagina's met browserachtige headers. Indeed kan alsnog Cloudflare challenge geven; manual import blijft fallback.",
+      "render_timeout_ms": 30000,
+      "render_wait": "domcontentloaded",
+      "filter_relevant": true,
+      "_uitleg": "Best-effort via headless browser (zie scrape/indeed.py): parseert het ingebedde mosaic-jobcards-JSON op de zoekresultaatpagina. Indeed blokkeert datacenter-IP's (GitHub-runners) actiever dan residentiële IP's, dus in CI kan dit 0 opleveren — dan blijft handmatige import (data/manual_links.json) de fallback. Per zoekgebied gezocht zodat resultaten lokaal zijn; delay iets hoger om blokkades te beperken.",
       "queries": [
         "crm",
+        "operations specialist",
         "sales support",
-        "business development",
-        "accountmanager",
-        "customer success",
-        "operations",
-        "sales operations",
-        "hubspot",
-        "salesforce"
+        "salesforce",
+        "customer success"
       ],
       "locations": [
-        "Nederland",
         "Amsterdam",
         "Utrecht",
         "Arnhem",
@@ -371,8 +361,7 @@
         "Amersfoort",
         "Ede"
       ],
-      "max_resultaten": 300,
-      "max_fetch_pages": 12
+      "max_resultaten": 120
     },
     "linkedin_manual": {
       "enabled": true,
