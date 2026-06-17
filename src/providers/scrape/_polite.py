@@ -310,6 +310,40 @@ def _jsonld_items(data):
         yield data
 
 
+_SALARIS_FACTOR = {  # naar bruto per maand
+    "HOUR": 173, "UUR": 173, "DAY": 21.7, "DAG": 21.7, "WEEK": 4.33,
+    "MONTH": 1, "MAAND": 1, "YEAR": 1 / 12, "JAAR": 1 / 12, "ANNUAL": 1 / 12,
+}
+
+
+def _jsonld_salaris(obj):
+    """Bouw een Nederlandse salarisregel uit JSON-LD baseSalary (genormaliseerd
+    naar bruto per maand), zodat de scorer het oppakt ook zonder omschrijving."""
+    bs = obj.get("baseSalary")
+    if not isinstance(bs, dict):
+        return ""
+    val = bs.get("value")
+    if not isinstance(val, dict):
+        return ""
+    eenheid = (val.get("unitText") or "").upper()
+    factor = _SALARIS_FACTOR.get(eenheid, 1)
+    bedragen = []
+    for sleutel in ("minValue", "maxValue", "value"):
+        ruw = val.get(sleutel)
+        try:
+            getal = float(str(ruw).replace(".", "").replace(",", "."))
+        except (TypeError, ValueError):
+            continue
+        if getal > 0:
+            bedragen.append(round(getal * factor))
+    if not bedragen:
+        return ""
+    lo, hi = min(bedragen), max(bedragen)
+    if lo == hi:
+        return f" Salaris ± € {lo} bruto per maand."
+    return f" Salaris € {lo} - € {hi} bruto per maand."
+
+
 def extraheer_detail_velden(html):
     """Haal best-effort vacaturevelden uit JSON-LD, OpenGraph en meta-tags."""
     try:
@@ -350,6 +384,9 @@ def extraheer_detail_velden(html):
                 schoon = _re.sub(r"<[^>]+>", " ", beschrijving).replace("&nbsp;", " ")
                 velden["omschrijving"] = _eerste_tekst(schoon, velden.get("omschrijving", ""))
             velden["datum"] = _eerste_tekst(obj.get("datePosted"), velden.get("datum", ""))
+            salaris_tekst = _jsonld_salaris(obj)
+            if salaris_tekst:
+                velden["omschrijving"] = (velden.get("omschrijving", "") + salaris_tekst).strip()
 
     og_titel = soup.find("meta", property="og:title")
     if og_titel and og_titel.get("content"):

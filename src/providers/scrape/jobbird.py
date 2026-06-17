@@ -44,7 +44,13 @@ def _via_sitemap(config):
     urls = urls[:max_res]
 
     resultaat = []
-    sessie = _polite.PoliteSession(NAAM, config)
+    # Statische detailpagina's worden door Jobbird geblokkeerd (CAPTCHA/login),
+    # maar een headless browser (render_js) krijgt de volledige JSON-LD wel.
+    if config.get("render_js"):
+        from . import _browser
+        sessie = _browser.BrowserRenderer(NAAM, config)
+    else:
+        sessie = _polite.PoliteSession(NAAM, config)
     detail_limiet = int(config.get("max_detail_pages", 0))
     verrijkt_aantal = 0
     for url in urls:
@@ -62,6 +68,8 @@ def _via_sitemap(config):
             vacature = _polite.verrijk_met_detailpagina(vacature, sessie)
             verrijkt_aantal += 1
         resultaat.append(vacature)
+    if hasattr(sessie, "close"):
+        sessie.close()
     print(f"[Jobbird] {len(resultaat)} vacatures via sitemap "
           f"({verrijkt_aantal} verrijkt met detailpagina).")
     return resultaat

@@ -47,6 +47,7 @@ REGISTRY = {
     "werk_nl_sitemap": sitemap_source,
     "nationale_vacaturebank_sitemap": sitemap_source,
     "werkenvoornederland_sitemap": sitemap_source,
+    "werkenbijdeoverheid": sitemap_source,
     "tempo_team": sitemap_source,
     "magnet_me": sitemap_source,
     "intermediair": generic_search,

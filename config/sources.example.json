@@ -98,12 +98,16 @@
       "delay_seconds": 0.2,
       "respect_robots_txt": false,
       "stop_on_block": true,
+      "detect_block_html": false,
       "filter_relevant": true,
-      "_uitleg": "Sitemapmodus is de stabiele route. Detailpagina's zitten meestal achter een CAPTCHA/login-wall, dus verrijking lukt vaak niet; de relevantiefilter op de URL-slug haalt het meeste rendement.",
-      "max_resultaten": 80,
+      "render_js": true,
+      "render_timeout_ms": 30000,
+      "relevance_scan_factor": 20,
+      "_uitleg": "Statische detailpagina's worden door Jobbird geblokkeerd (CAPTCHA/login), maar een headless browser (render_js) krijgt de volledige JSON-LD: echte locatie, bedrijf en salaris (Jobbird zet géén omschrijving in JSON-LD). detect_block_html uit (valse positief). Locatie-verrijking is de winst: zo komen Jobbird-vacatures in een zoekgebied wél door.",
+      "max_resultaten": 60,
       "max_sitemap_pages": 10,
       "fetch_details": true,
-      "max_detail_pages": 25
+      "max_detail_pages": 40
     },
     "randstad": {
       "enabled": true,
@@ -209,6 +213,25 @@
       "max_sitemap_pages": 10,
       "fetch_details": true,
       "max_detail_pages": 80
+    },
+    "werkenbijdeoverheid": {
+      "enabled": true,
+      "type": "polite_scrape",
+      "country": "NL",
+      "priority": 3,
+      "naam": "WerkenbijdeOverheid",
+      "sitemap_url": "https://www.werkenbijdeoverheid.nl/sitemap-vacatures.xml",
+      "detail_bevat": "/vacature",
+      "delay_seconds": 0.2,
+      "respect_robots_txt": false,
+      "stop_on_block": true,
+      "filter_relevant": true,
+      "max_resultaten": 60,
+      "max_sitemap_pages": 6,
+      "relevance_scan_factor": 25,
+      "fetch_details": true,
+      "max_detail_pages": 60,
+      "_uitleg": "Bredere overheidsvacaturesite (gemeenten/provincies/waterschappen) dan WerkenvoorNederland (alleen rijksoverheid). Server-gerenderd met JSON-LD. Let op: veel overheidsvacatures vallen buiten Kevins zoekgebieden, dus de opbrengst onder de strikte locatieregel is beperkt; relevante rollen in Utrecht/Arnhem/Amsterdam komen wél door."
     },
     "tempo_team": {
       "enabled": true,

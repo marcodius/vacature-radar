@@ -54,11 +54,15 @@ junk-flood weg, richt het detail-ophaalbudget op relevante vacatures en versnelt
 de run. Dit is een grove voorfilter, geen scoring.
 
 Let op: detailverrijking werkt voor server-gerenderde bronnen (JSON-LD), zoals
-WerkenvoorNederland, Tempo-Team en Magnet.me. NVB-detailpagina's zijn
-JavaScript-only en worden via een headless browser (Playwright, `render_js: true`,
-zie `scrape/_browser.py`) verrijkt; Jobbird zit achter een CAPTCHA — daar blijft
-het bij titel uit de URL-slug. De betrouwbaarste matchbronnen (met locatie +
-omschrijving) zijn de API's (Adzuna, Jooble) en de server-gerenderde sitemaps.
+WerkenvoorNederland, WerkenbijdeOverheid, Tempo-Team en Magnet.me. NVB- en
+Jobbird-detailpagina's zijn JavaScript-only resp. CAPTCHA-geblokkeerd en worden
+via een headless browser (Playwright, `render_js: true`, zie `scrape/_browser.py`)
+verrijkt. Jobbird zet géén omschrijving in zijn JSON-LD, maar wél locatie,
+bedrijf en salaris (`baseSalary`, genormaliseerd naar bruto/maand in
+`extraheer_detail_velden`). De betrouwbaarste matchbronnen zijn de API's (Adzuna,
+Jooble) en de server-gerenderde sitemaps. Indeed blijft onbruikbaar: geen
+sitemap, en de zoekpagina's hebben geen JSON-LD plus actieve anti-bot tegen
+datacenter-IP's (GitHub-runners).
 
 ## Belangrijke regels
 
@@ -71,10 +75,10 @@ omschrijving) zijn de API's (Adzuna, Jooble) en de server-gerenderde sitemaps.
 
 ## Status
 
-Actieve bronnen: NVB-/WerkenvoorNederland-/Jobbird-sitemaps, Tempo-Team- en
-Magnet.me-sitemaps, Randstad, YoungCapital, LinkedIn (vaak 429), Talent.com,
-Jobrapido, en de API's Jooble + Adzuna (per zoekgebied × zoekterm, sleutels via
-Secrets). Extra gratis API's Arbeitnow en Jobicy staan aan (weinig NL-rendement
+Actieve bronnen: NVB-/WerkenvoorNederland-/WerkenbijdeOverheid-/Jobbird-sitemaps,
+Tempo-Team- en Magnet.me-sitemaps, Randstad, YoungCapital, LinkedIn (vaak 429),
+Talent.com, Jobrapido, en de API's Jooble + Adzuna (per zoekgebied × zoekterm,
+sleutels via Secrets). Extra gratis API's Arbeitnow en Jobicy staan aan (weinig NL-rendement
 onder de strikte locatieregel). RSS staat uit tot er echte feed-URL's zijn
 ingevuld. Geblokkeerd/uit: werk.nl, Indeed, SimplyHired (anti-bot/Cloudflare) en
 Joblift (404, gewijzigde URL-structuur) — voor LinkedIn/Indeed blijft handmatige
