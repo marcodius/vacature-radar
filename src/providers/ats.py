@@ -33,6 +33,13 @@ def _strip_html(tekst):
     return re.sub(r"<[^>]+>", " ", tekst or "").replace("&nbsp;", " ").strip()
 
 
+def _is_nl(locatie):
+    """Alleen een NL-hint geven als de locatie echt NL is (anders telt een
+    buitenlandse 'hybrid'-baan onterecht als remote-NL)."""
+    laag = (locatie or "").lower()
+    return "nl" if any(t in laag for t in ("nederland", "netherlands", "holland")) else ""
+
+
 def _vacature(titel, bedrijf, locatie, url, omschrijving, datum):
     return {
         "titel": titel or "Onbekende functie",
@@ -42,7 +49,7 @@ def _vacature(titel, bedrijf, locatie, url, omschrijving, datum):
         "omschrijving": _strip_html(omschrijving)[:4000],
         "datum": (datum or "")[:10],
         "bron": bedrijf or NAAM,
-        "land": "NL",
+        "land": _is_nl(locatie),
     }
 
 

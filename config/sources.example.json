@@ -690,14 +690,20 @@
       "_uitleg": "Gratis remote-jobs API zonder sleutel. Internationaal remote; 'geo' en 'post_filter_keywords' beperken tot relevante (remote-)functies. Onder de strikte NL-locatieregel halen alleen functies met expliciet Nederland/Europa de site."
     },
     "ats_bedrijven": {
-      "enabled": false,
+      "enabled": true,
       "type": "api",
       "priority": 19,
-      "max_resultaten_per_werkgever": 100,
-      "_uitleg": "Losse grote werkgevers via hun ATS-API (greenhouse/recruitee/lever/smartrecruiters). Zet 'enabled' op true en vul 'werkgevers' met {naam, platform, board}. 'board' is de identifier in de ATS-URL van het bedrijf. Locatie komt uit de API, dus de strikte locatiefilter houdt de vacatures in een zoekgebied over. Voorbeelden hieronder zijn placeholders.",
+      "max_resultaten_per_werkgever": 150,
+      "_uitleg": "Losse grote werkgevers via hun ATS-API (greenhouse/recruitee/lever/smartrecruiters). 'board' is de identifier in de ATS-URL. Locatie komt uit de API, dus de strikte locatiefilter houdt de vacatures in een zoekgebied over. Werkende boards geverifieerd juni 2026; voeg gerust werkgevers toe.",
       "werkgevers": [
-        {"naam": "Voorbeeld (greenhouse)", "platform": "greenhouse", "board": "voorbeeld"},
-        {"naam": "Voorbeeld (recruitee)", "platform": "recruitee", "board": "voorbeeld"}
+        {"naam": "Channable", "platform": "recruitee", "board": "channable"},
+        {"naam": "Coolblue", "platform": "smartrecruiters", "board": "coolblue"},
+        {"naam": "Adyen", "platform": "greenhouse", "board": "adyen"},
+        {"naam": "MessageBird", "platform": "greenhouse", "board": "bird"},
+        {"naam": "Catawiki", "platform": "greenhouse", "board": "catawiki"},
+        {"naam": "bunq", "platform": "recruitee", "board": "bunq"},
+        {"naam": "Nmbrs", "platform": "recruitee", "board": "nmbrs"},
+        {"naam": "Vandebron", "platform": "recruitee", "board": "vandebron"}
       ]
     },
     "rss": {
