@@ -22,6 +22,11 @@ def fetch(config):
     detail_bevat = config.get("detail_bevat", "")
     max_res = config.get("max_resultaten", 50)
     land = config.get("country", "")
+    # Werkgever-/gemeentesites: alle vacatures zitten op één plaats/werkgever.
+    # Een vaste locatie/bedrijf garandeert correcte classificatie ook als de
+    # detailpagina geen locatie in JSON-LD heeft.
+    vaste_locatie = config.get("vaste_locatie")
+    vast_bedrijf = config.get("vast_bedrijf")
 
     if not sitemap_url:
         print(f"[{naam}] Geen 'sitemap_url' in config. Bron wordt overgeslagen.")
@@ -55,8 +60,8 @@ def fetch(config):
     for url in urls:
         vacature = {
             "titel": _polite.titel_uit_slug(url),
-            "bedrijf": "Onbekend bedrijf",
-            "locatie": "Nederland",
+            "bedrijf": vast_bedrijf or "Onbekend bedrijf",
+            "locatie": vaste_locatie or "Nederland",
             "url": url,
             "omschrijving": "",
             "datum": "",
@@ -66,6 +71,11 @@ def fetch(config):
         if config.get("fetch_details") and verrijkt_aantal < detail_limiet:
             vacature = _polite.verrijk_met_detailpagina(vacature, sessie)
             verrijkt_aantal += 1
+        # Vaste locatie/bedrijf is gezaghebbend voor werkgever-sites.
+        if vaste_locatie:
+            vacature["locatie"] = vaste_locatie
+        if vast_bedrijf:
+            vacature["bedrijf"] = vast_bedrijf
         resultaat.append(vacature)
     if hasattr(sessie, "close"):
         sessie.close()
