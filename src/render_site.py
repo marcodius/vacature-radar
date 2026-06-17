@@ -18,11 +18,44 @@ import json
 import os
 import re
 
+try:
+    from zoneinfo import ZoneInfo
+    AMSTERDAM = ZoneInfo("Europe/Amsterdam")
+except Exception:  # noqa: BLE001 - geen tzdata: val terug op UTC
+    AMSTERDAM = None
+
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(PROJECT_DIR, "data")
 PUBLIC_DIR = os.path.join(PROJECT_DIR, "public")
 
 DREMPEL = 50  # score waarboven een vacature standaard als topmatch telt
+
+# De fetch draait dagelijks via GitHub Actions cron "0 6 * * *" (UTC).
+FETCH_CRON_UUR_UTC = 6
+WEEKDAGEN = ["maandag", "dinsdag", "woensdag", "donderdag", "vrijdag",
+             "zaterdag", "zondag"]
+MAANDEN = ["januari", "februari", "maart", "april", "mei", "juni", "juli",
+           "augustus", "september", "oktober", "november", "december"]
+
+
+def _naar_amsterdam(dt_utc):
+    return dt_utc.astimezone(AMSTERDAM) if AMSTERDAM else dt_utc
+
+
+def _volgende_ronde(nu_utc):
+    """Eerstvolgende geplande fetch (06:00 UTC), in Amsterdamse tijd."""
+    volgende = nu_utc.replace(hour=FETCH_CRON_UUR_UTC, minute=0, second=0, microsecond=0)
+    if volgende <= nu_utc:
+        volgende += datetime.timedelta(days=1)
+    return _naar_amsterdam(volgende)
+
+
+def _nl_datumtijd(dt, met_tijd=True):
+    """Nederlandse weergave, bijv. 'dinsdag 17 juni om 08:00'."""
+    tekst = f"{WEEKDAGEN[dt.weekday()]} {dt.day} {MAANDEN[dt.month - 1]}"
+    if met_tijd:
+        tekst += f" om {dt.strftime('%H:%M')}"
+    return tekst
 
 LABEL_KLEUR = {
     "Zeer interessant": "#1a7f37",
@@ -225,8 +258,10 @@ def main():
         return
 
     vacatures = dedup_inhoud(_laad(scored_pad))
-    # Sorteer op score (hoog -> laag), dan op nieuwste datum.
-    vandaag = datetime.date.today()
+    # Tijden in Amsterdamse tijd (build draait in CI op UTC).
+    nu_utc = datetime.datetime.now(datetime.timezone.utc)
+    nu_ams = _naar_amsterdam(nu_utc)
+    vandaag = nu_ams.date()
     vacatures.sort(
         key=lambda v: (v.get("score", 0), (parse_datum(v.get("datum")) or datetime.date.min).isoformat()),
         reverse=True,
@@ -237,7 +272,8 @@ def main():
 
     aantal_afgewezen = len(_laad(os.path.join(DATA_DIR, "rejected_jobs.json")))
     aantal_opgehaald = len(_laad(os.path.join(DATA_DIR, "jobs_raw.json")))
-    datum_nu = vandaag.strftime("%d-%m-%Y")
+    bijgewerkt_tekst = _nl_datumtijd(nu_ams)
+    volgende_ronde_tekst = _nl_datumtijd(_volgende_ronde(nu_utc))
 
     # Filteropties uit de data afleiden.
     profielen = sorted({v.get("profiel", "") for v in vacatures if v.get("profiel")})
@@ -288,6 +324,8 @@ def main():
     header {{ margin-bottom: 1rem; }}
     h1 {{ margin: 0 0 0.2rem; font-size: 1.6rem; }}
     .uitleg {{ color: var(--grijs); font-size: 0.95rem; margin: 0; }}
+    .tijden {{ color: var(--grijs); font-size: 0.85rem; margin: 0.4rem 0 0; }}
+    .tijden .tz {{ opacity: 0.7; }}
 
     .stats {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.6rem; margin: 1rem 0; }}
     .stat {{ background: #fff; border: 1px solid var(--rand); border-radius: 10px;
@@ -346,7 +384,9 @@ def main():
   <header>
     <h1>Vacature Radar</h1>
     <p class="uitleg">Vacatures gematcht tegen Kevins zoekprofielen (regio Midden/Oost en
-      Amsterdam). Bijgewerkt op {datum_nu}.</p>
+      Amsterdam).</p>
+    <p class="tijden">Bijgewerkt: {bijgewerkt_tekst} &middot;
+      Volgende ronde: rond {volgende_ronde_tekst} <span class="tz">(Amsterdamse tijd)</span></p>
   </header>
   {statchips}
   <main>
