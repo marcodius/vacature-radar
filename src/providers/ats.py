@@ -46,7 +46,9 @@ def _vacature(titel, bedrijf, locatie, url, omschrijving, datum):
         "bedrijf": bedrijf or "Onbekend bedrijf",
         "locatie": locatie or "Onbekend",
         "url": url or "",
-        "omschrijving": _strip_html(omschrijving)[:4000],
+        # Ruim afkappen: hybride- en salaris-vermeldingen staan vaak achteraan
+        # (arbeidsvoorwaarden); te krap knippen kost matchsignaal.
+        "omschrijving": _strip_html(omschrijving)[:12000],
         "datum": (datum or "")[:10],
         "bron": bedrijf or NAAM,
         "land": _is_nl(locatie),
