@@ -67,6 +67,21 @@ datacenter-IP's actiever dan residentiële, dus in CI kan Indeed 0 opleveren —
 dan blijft handmatige import (`data/manual_links.json`) de fallback. De
 headless browser gebruikt een realistische user-agent (geen 'HeadlessChrome').
 
+### Werkgevers (bedrijven) toevoegen
+
+Losse werkgevers met een publiek ATS (greenhouse/recruitee/lever/smartrecruiters)
+voeg je toe aan `config/sources.json` onder `ats_bedrijven.werkgevers` als
+`{"naam", "platform", "board"}`. Check eerst of een bedrijf bruikbaar is — en of
+het relevante matches oplevert — met:
+
+```
+python tools/check_werkgever.py <board>
+```
+
+Dat probeert alle platforms en print de toe-te-voegen regel. Grote corporates
+(Rabobank, ASR, ABN, ING) hebben géén toegankelijk publiek ATS (maatwerk-JS,
+geen JSON-LD); hun vacatures komen al binnen via de aggregator-bronnen.
+
 ## Belangrijke regels
 
 - Scraping is toegestaan voor publiek toegankelijke vacaturepagina's, inclusief LinkedIn/Indeed wanneer daarvoor een provider is ingericht.
