@@ -39,7 +39,14 @@ def fetch(config):
     basis_url = config.get("basis_url") or config.get("base_url")
 
     land = config.get("country", "")
-    htmls = _polite.haal_pagina_html(naam, _page_urls(config), config)
+    # JS-gerenderde lijsten (SPA's zoals werkenbij.amsterdam.nl) via headless browser.
+    if config.get("render_js"):
+        from . import _browser
+        sessie = _browser.BrowserRenderer(naam, config)
+        htmls = [h for h in (sessie.get(u) for u in _page_urls(config)) if h]
+        sessie.close()
+    else:
+        htmls = _polite.haal_pagina_html(naam, _page_urls(config), config)
     resultaat = []
     for html in htmls:
         resultaat.extend(
@@ -53,9 +60,15 @@ def fetch(config):
         )
 
     resultaat = _polite.unieke_vacatures(resultaat)
-    if land:
-        for v in resultaat:
+    vaste_locatie = config.get("vaste_locatie")
+    vast_bedrijf = config.get("vast_bedrijf")
+    for v in resultaat:
+        if land:
             v.setdefault("land", land)
+        if vaste_locatie:
+            v["locatie"] = vaste_locatie
+        if vast_bedrijf:
+            v["bedrijf"] = vast_bedrijf
 
     filter_aan, trefwoorden = relevance.filter_config(config)
     if filter_aan:

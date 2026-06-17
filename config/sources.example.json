@@ -275,6 +275,48 @@
       "max_detail_pages": 40,
       "_uitleg": "Carrièresite gemeente Ede. Detailpagina's hebben geen JobPosting-JSON-LD, maar alle vacatures zitten in Ede (vaste_locatie) → gegarandeerd in zoekprofiel Midden/Oost. Titel uit de slug/og:title."
     },
+    "gemeente_amsterdam": {
+      "enabled": true,
+      "type": "polite_scrape",
+      "country": "NL",
+      "priority": 7,
+      "naam": "Gemeente Amsterdam",
+      "base_url": "https://werkenbij.amsterdam.nl/vacatures",
+      "basis_url": "https://werkenbij.amsterdam.nl",
+      "detail_bevat": "/vacatures/",
+      "detail_regex": "[0-9a-f]{8}-[0-9a-f]{4}",
+      "render_js": true,
+      "render_wait": "networkidle",
+      "render_timeout_ms": 30000,
+      "delay_seconds": 0.5,
+      "respect_robots_txt": false,
+      "stop_on_block": true,
+      "filter_relevant": true,
+      "vaste_locatie": "Amsterdam",
+      "vast_bedrijf": "Gemeente Amsterdam",
+      "max_pages": 1,
+      "max_resultaten": 60,
+      "_uitleg": "Carrièresite gemeente Amsterdam is een SPA; de lijst wordt via een headless browser gerenderd en de vacaturelinks (met uuid) eruit gehaald. Alle vacatures zitten in Amsterdam (vaste_locatie) -> zoekprofiel Amsterdam. detail_regex sluit de overzichtspagina uit."
+    },
+    "academictransfer": {
+      "enabled": true,
+      "type": "polite_scrape",
+      "country": "NL",
+      "priority": 9,
+      "naam": "AcademicTransfer",
+      "sitemap_url": "https://www.academictransfer.com/sitemap-vacancies.xml",
+      "detail_bevat": "/jobs/",
+      "delay_seconds": 0.2,
+      "respect_robots_txt": false,
+      "stop_on_block": true,
+      "filter_relevant": true,
+      "max_resultaten": 60,
+      "max_sitemap_pages": 2,
+      "relevance_scan_factor": 15,
+      "fetch_details": true,
+      "max_detail_pages": 60,
+      "_uitleg": "Alle NL-universiteiten/onderzoeksinstellingen incl. WUR/Wageningen. De relevantiefilter houdt support/operations-rollen over (geen PhD/research); de strikte locatieregel houdt Wageningen + andere zoekgebieden over. De stad staat doorgaans in de titel, dus de profielmatch plaatst de vacature correct."
+    },
     "tempo_team": {
       "enabled": true,
       "type": "polite_scrape",
@@ -646,6 +688,17 @@
         "business operations", "sales support", "project"
       ],
       "_uitleg": "Gratis remote-jobs API zonder sleutel. Internationaal remote; 'geo' en 'post_filter_keywords' beperken tot relevante (remote-)functies. Onder de strikte NL-locatieregel halen alleen functies met expliciet Nederland/Europa de site."
+    },
+    "ats_bedrijven": {
+      "enabled": false,
+      "type": "api",
+      "priority": 19,
+      "max_resultaten_per_werkgever": 100,
+      "_uitleg": "Losse grote werkgevers via hun ATS-API (greenhouse/recruitee/lever/smartrecruiters). Zet 'enabled' op true en vul 'werkgevers' met {naam, platform, board}. 'board' is de identifier in de ATS-URL van het bedrijf. Locatie komt uit de API, dus de strikte locatiefilter houdt de vacatures in een zoekgebied over. Voorbeelden hieronder zijn placeholders.",
+      "werkgevers": [
+        {"naam": "Voorbeeld (greenhouse)", "platform": "greenhouse", "board": "voorbeeld"},
+        {"naam": "Voorbeeld (recruitee)", "platform": "recruitee", "board": "voorbeeld"}
+      ]
     },
     "rss": {
       "enabled": false,

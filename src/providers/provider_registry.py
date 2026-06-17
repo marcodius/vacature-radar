@@ -10,7 +10,7 @@ Drie typen bronnen:
 - "manual"         : handmatige fallback-import (bijv. LinkedIn, Indeed).
 """
 
-from providers import arbeitnow, jobicy, rss
+from providers import arbeitnow, ats, jobicy, rss
 from providers.api import adzuna, jooble, nationale_vacaturebank, vacatures_overheid
 from providers.manual import manual_links
 from providers.scrape import (
@@ -35,6 +35,7 @@ REGISTRY = {
     "arbeitnow": arbeitnow,
     "jobicy": jobicy,
     "rss": rss,
+    "ats_bedrijven": ats,
     # Scrape-bronnen
     "werk_nl": werk_nl,
     "jobbird": jobbird,
@@ -50,6 +51,8 @@ REGISTRY = {
     "werkenbijdeoverheid": sitemap_source,
     "gemeente_utrecht": sitemap_source,
     "gemeente_ede": sitemap_source,
+    "gemeente_amsterdam": generic_search,
+    "academictransfer": sitemap_source,
     "tempo_team": sitemap_source,
     "magnet_me": sitemap_source,
     "intermediair": generic_search,
