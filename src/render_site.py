@@ -194,15 +194,16 @@ def vacature_html(v, vandaag):
         chips.append(chip("🕑 " + datum_mooi, "chip chip-datum", titel=datum_iso))
     chips_html = "<div class='chips'>" + "".join(chips) + "</div>" if chips else ""
 
-    # Meta-regel (bedrijf + bron), zonder onbekende waarden.
-    meta_delen = []
+    # Herkomst (bedrijf + bron) — wordt rechtsboven in de kaart getoond.
+    herkomst_delen = []
     if bedrijf and bedrijf.lower() not in GENERIEK_BEDRIJF:
-        meta_delen.append(e(bedrijf))
+        herkomst_delen.append(f"<span class='herkomst-bedrijf'>{e(bedrijf)}</span>")
     if bron:
-        meta_delen.append("Bron: " + e(bron))
-    meta_html = f"<p class='meta'>{' &middot; '.join(meta_delen)}</p>" if meta_delen else ""
+        herkomst_delen.append(f"<span class='herkomst-bron'>via {e(bron)}</span>")
+    herkomst_html = ("<div class='herkomst'>" + "".join(herkomst_delen) + "</div>"
+                     if herkomst_delen else "")
 
-    # Inklapbare matchredenen / waarschuwingen.
+    # Inklapbare matchredenen; waarschuwingen compact; dealbreakers prominent.
     blokken = []
     redenen = v.get("redenen", [])
     if redenen:
@@ -213,8 +214,8 @@ def vacature_html(v, vandaag):
         )
     waarschuwingen = v.get("waarschuwingen", [])
     if waarschuwingen:
-        items = "".join(f"<li>{e(w)}</li>" for w in waarschuwingen)
-        blokken.append(f"<div class='waarschuwing'><strong>Let op</strong><ul>{items}</ul></div>")
+        regel = " &middot; ".join(e(w) for w in waarschuwingen)
+        blokken.append(f"<div class='waarschuwing'>⚠ {regel}</div>")
     dealbreakers = v.get("dealbreakers", [])
     if dealbreakers:
         items = "".join(f"<li>{e(dd)}</li>" for dd in dealbreakers)
@@ -231,16 +232,22 @@ def vacature_html(v, vandaag):
     return f"""
     <article class="vacature" data-score="{score}" data-laag="{laag}"
       data-profiel="{e(v.get('profiel'))}" data-bron="{e(bron)}"
-      data-categorie="{e(categorie)}"
+      data-categorie="{e(categorie)}" data-url="{url}"
       data-hybride="{hybride_attr}" data-datum="{e(datum_iso)}" data-zoek="{zoek}">
       <div class="kop">
         <span class="score" style="--kleur:{kleur}" title="{e(label)}">{score}</span>
         <div class="kop-tekst">
-          <h2>{titel_html}</h2>
+          <h2>{titel_html} <span class="badge-nieuw">Nieuw</span></h2>
           <span class="label" style="color:{kleur}">{e(label)}</span>
         </div>
+        <div class="kop-rechts">
+          <div class="acties">
+            <button type="button" class="act act-save" title="Bewaren" aria-label="Bewaren">☆</button>
+            <button type="button" class="act act-hide" title="Niet interessant" aria-label="Verbergen">✕</button>
+          </div>
+          {herkomst_html}
+        </div>
       </div>
-      {meta_html}
       {chips_html}
       {''.join(blokken)}
       {knop}
@@ -269,6 +276,7 @@ def main():
     # Tijden in Amsterdamse tijd (build draait in CI op UTC).
     nu_utc = datetime.datetime.now(datetime.timezone.utc)
     nu_ams = _naar_amsterdam(nu_utc)
+    now_ms = int(nu_utc.timestamp() * 1000)
     vandaag = nu_ams.date()
     vacatures.sort(
         key=lambda v: (v.get("score", 0), (parse_datum(v.get("datum")) or datetime.date.min).isoformat()),
@@ -318,8 +326,12 @@ def main():
       </select>
       <label class="checkbox"><input type="checkbox" id="f-hybride"> Alleen hybride</label>
       <label class="checkbox"><input type="checkbox" id="f-laag"> Lage matches tonen</label>
+      <label class="checkbox"><input type="checkbox" id="f-nieuw"> Alleen nieuw</label>
+      <label class="checkbox"><input type="checkbox" id="f-bewaard"> Alleen bewaard</label>
+      <label class="checkbox"><input type="checkbox" id="f-verborgen"> Toon verborgen</label>
+      <button type="button" id="f-reset" class="reset">Wis filters</button>
     </div>
-    <p class="teller-regel"><strong id="teller">{len(top)}</strong> vacatures getoond</p>
+    <p class="teller-regel"><strong id="teller">{len(top)}</strong> vacatures getoond<span id="teller-extra"></span></p>
     """
 
     pagina = f"""<!DOCTYPE html>
@@ -352,20 +364,38 @@ def main():
       border-radius: 8px; font-size: 0.9rem; background: #fff; }}
     .filters input[type=search] {{ flex: 1 1 220px; min-width: 160px; }}
     .checkbox {{ display: flex; align-items: center; gap: 0.35rem; font-size: 0.9rem; color: #333; }}
+    .reset {{ font-size: 0.85rem; color: var(--blauw); background: none; border: none;
+      cursor: pointer; text-decoration: underline; padding: 0 0.2rem; }}
     .teller-regel {{ color: var(--grijs); font-size: 0.9rem; margin: 0.6rem 0 1rem; }}
+    #teller-extra {{ margin-left: 0.4rem; }}
 
     .vacature {{ background: #fff; border: 1px solid var(--rand); border-radius: 12px;
-      padding: 1rem 1.1rem; margin-bottom: 0.9rem; }}
-    .kop {{ display: flex; gap: 0.8rem; align-items: flex-start; }}
-    .score {{ flex: none; width: 2.6rem; height: 2.6rem; border-radius: 50%;
+      padding: 0.8rem 1.05rem; margin-bottom: 0.7rem; }}
+    .vacature[data-laag="1"] {{ background: #fbfbfc; }}
+    .kop {{ display: flex; gap: 0.7rem; align-items: flex-start; }}
+    .score {{ flex: none; width: 2.5rem; height: 2.5rem; border-radius: 50%;
       display: grid; place-items: center; font-weight: 700; font-size: 1rem;
       color: #fff; background: var(--kleur); }}
-    .kop-tekst {{ min-width: 0; }}
-    .kop h2 {{ font-size: 1.08rem; margin: 0; line-height: 1.3; }}
+    .kop-tekst {{ min-width: 0; flex: 1 1 auto; }}
+    .kop h2 {{ font-size: 1.05rem; margin: 0; line-height: 1.3; }}
     .kop h2 a {{ color: var(--blauw); text-decoration: none; }}
     .kop h2 a:hover {{ text-decoration: underline; }}
     .label {{ font-size: 0.8rem; font-weight: 600; }}
-    .meta {{ color: var(--grijs); font-size: 0.88rem; margin: 0.5rem 0 0; }}
+    .kop-rechts {{ flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 0.3rem; }}
+    .acties {{ display: flex; gap: 0.25rem; }}
+    .act {{ border: 1px solid var(--rand); background: #fff; border-radius: 6px; cursor: pointer;
+      width: 1.7rem; height: 1.7rem; font-size: 0.9rem; line-height: 1; color: var(--grijs); padding: 0; }}
+    .act:hover {{ background: #f0f1f4; }}
+    .act-save.actief {{ color: #b8860b; border-color: #e8d48a; background: #fcf6e3; }}
+    .herkomst {{ text-align: right; font-size: 0.82rem; line-height: 1.25; }}
+    .herkomst-bedrijf {{ display: block; color: #333; font-weight: 600; }}
+    .herkomst-bron {{ display: block; color: var(--grijs); }}
+    .badge-nieuw {{ display: none; font-size: 0.7rem; font-weight: 700; color: #fff;
+      background: #1a7f37; border-radius: 999px; padding: 0.05rem 0.45rem; vertical-align: middle; }}
+    .vacature[data-nieuw="1"] .badge-nieuw {{ display: inline-block; }}
+    .vacature.verborgen-kaart {{ opacity: 0.55; }}
+    .divider {{ font-size: 0.85rem; font-weight: 600; color: var(--grijs); text-transform: uppercase;
+      letter-spacing: 0.03em; margin: 0.6rem 0 0.5rem; padding-top: 0.6rem; border-top: 1px dashed var(--rand); }}
 
     .chips {{ display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.6rem 0 0.2rem; }}
     .chip {{ font-size: 0.8rem; background: #f0f1f4; border: 1px solid var(--rand);
@@ -376,9 +406,9 @@ def main():
 
     details.match {{ margin: 0.7rem 0 0; }}
     details.match > summary {{ cursor: pointer; font-size: 0.88rem; font-weight: 600; color: #444; }}
-    .match ul, .waarschuwing ul, .dealbreaker ul {{ margin: 0.4rem 0 0; padding-left: 1.2rem; font-size: 0.88rem; }}
-    .waarschuwing {{ color: #9a6700; margin-top: 0.6rem; }}
-    .waarschuwing strong, .dealbreaker strong {{ font-size: 0.88rem; }}
+    .match ul, .dealbreaker ul {{ margin: 0.4rem 0 0; padding-left: 1.2rem; font-size: 0.88rem; }}
+    .waarschuwing {{ color: #8a7300; font-size: 0.82rem; margin-top: 0.5rem; }}
+    .dealbreaker strong {{ font-size: 0.88rem; }}
     .dealbreaker {{ color: #b3261e; margin-top: 0.6rem; }}
 
     .knop {{ display: inline-block; margin-top: 0.8rem; font-size: 0.88rem; font-weight: 600;
@@ -414,47 +444,143 @@ def main():
   </footer>
   <script>
     (function () {{
+      var store = {{
+        get: function (k, d) {{ try {{ return JSON.parse(localStorage.getItem(k)) || d; }} catch (e) {{ return d; }} }},
+        set: function (k, v) {{ try {{ localStorage.setItem(k, JSON.stringify(v)); }} catch (e) {{}} }}
+      }};
       var q = document.getElementById('zoek');
       var fType = document.getElementById('f-type');
       var fProfiel = document.getElementById('f-profiel');
       var fBron = document.getElementById('f-bron');
       var fHybride = document.getElementById('f-hybride');
       var fLaag = document.getElementById('f-laag');
+      var fNieuw = document.getElementById('f-nieuw');
+      var fBewaard = document.getElementById('f-bewaard');
+      var fVerborgen = document.getElementById('f-verborgen');
       var fSort = document.getElementById('f-sort');
+      var fReset = document.getElementById('f-reset');
       var lijst = document.getElementById('vacatures');
       var teller = document.getElementById('teller');
+      var tellerExtra = document.getElementById('teller-extra');
       var kaarten = Array.prototype.slice.call(lijst.querySelectorAll('.vacature'));
+      var nu = {now_ms};
+
+      var seen = store.get('vr_seen', {{}});
+      var saved = store.get('vr_saved', {{}});
+      var hidden = store.get('vr_hidden', {{}});
+
+      // Markeer 'nieuw' (URL nog niet eerder gezien) en zet save/hide-staat.
+      kaarten.forEach(function (k) {{
+        var u = k.dataset.url;
+        if (u && !seen[u]) k.setAttribute('data-nieuw', '1');
+        if (u && saved[u]) {{ k.classList.add('bewaard'); var b = k.querySelector('.act-save'); if (b) {{ b.classList.add('actief'); b.textContent = '★'; }} }}
+      }});
+      // Werk 'gezien' bij (prune ouder dan 60 dagen).
+      var grens = nu - 60 * 24 * 3600 * 1000, nieuwSeen = {{}};
+      Object.keys(seen).forEach(function (u) {{ if (seen[u] > grens) nieuwSeen[u] = seen[u]; }});
+      kaarten.forEach(function (k) {{ if (k.dataset.url) nieuwSeen[k.dataset.url] = nu; }});
+      seen = nieuwSeen; store.set('vr_seen', seen);
+
+      var controls = {{ zoek: q, type: fType, profiel: fProfiel, bron: fBron, sort: fSort,
+        hybride: fHybride, laag: fLaag, nieuw: fNieuw, bewaard: fBewaard, verborgen: fVerborgen }};
+      function leesStaat() {{
+        var p = new URLSearchParams(location.search), s = store.get('vr_filters', {{}});
+        Object.keys(controls).forEach(function (naam) {{
+          var el = controls[naam], v = p.has(naam) ? p.get(naam) : s[naam];
+          if (v == null) return;
+          if (el.type === 'checkbox') el.checked = (v === '1' || v === true);
+          else el.value = v;
+        }});
+      }}
+      function schrijfStaat() {{
+        var s = {{}}, p = new URLSearchParams();
+        Object.keys(controls).forEach(function (naam) {{
+          var el = controls[naam];
+          if (el.type === 'checkbox') {{ s[naam] = el.checked; if (el.checked) p.set(naam, '1'); }}
+          else {{ s[naam] = el.value; if (el.value) p.set(naam, el.value); }}
+        }});
+        store.set('vr_filters', s);
+        history.replaceState(null, '', location.pathname + (p.toString() ? '?' + p.toString() : ''));
+      }}
+
+      var divider = document.createElement('div');
+      divider.className = 'divider'; divider.textContent = 'Lage matches';
+      function plaatsDivider(gesorteerd, opDatum) {{
+        if (divider.parentNode) divider.parentNode.removeChild(divider);
+        if (opDatum) return;
+        for (var i = 0; i < gesorteerd.length; i++) {{
+          if (gesorteerd[i].style.display !== 'none' && gesorteerd[i].dataset.laag === '1') {{
+            lijst.insertBefore(divider, gesorteerd[i]); return;
+          }}
+        }}
+      }}
 
       function pas() {{
         var term = (q.value || '').toLowerCase().trim();
         var prof = fProfiel.value, bron = fBron.value, type = fType.value;
         var alleenHy = fHybride.checked, toonLaag = fLaag.checked;
-        var zichtbaar = 0;
+        var alleenNieuw = fNieuw.checked, alleenBewaard = fBewaard.checked, toonVerborgen = fVerborgen.checked;
+        var zichtbaar = 0, aantalVerborgen = 0;
         kaarten.forEach(function (k) {{
+          var u = k.dataset.url, isHidden = !!(u && hidden[u]);
+          if (isHidden) aantalVerborgen++;
           var ok = true;
+          if (isHidden && !toonVerborgen) ok = false;
           if (term && k.dataset.zoek.indexOf(term) === -1) ok = false;
           if (type && k.dataset.categorie !== type) ok = false;
           if (prof && k.dataset.profiel !== prof) ok = false;
           if (bron && k.dataset.bron !== bron) ok = false;
           if (alleenHy && k.dataset.hybride !== 'true') ok = false;
           if (!toonLaag && k.dataset.laag === '1') ok = false;
+          if (alleenNieuw && k.getAttribute('data-nieuw') !== '1') ok = false;
+          if (alleenBewaard && !(u && saved[u])) ok = false;
+          k.classList.toggle('verborgen-kaart', isHidden && toonVerborgen);
           k.style.display = ok ? '' : 'none';
           if (ok) zichtbaar++;
         }});
         teller.textContent = zichtbaar;
+        tellerExtra.textContent = aantalVerborgen ? (' · ' + aantalVerborgen + ' verborgen') : '';
+        var opDatum = fSort.value === 'datum';
         var gesorteerd = kaarten.slice().sort(function (a, b) {{
           var sa = +a.dataset.score, sb = +b.dataset.score;
           var da = a.dataset.datum || '', db = b.dataset.datum || '';
-          if (fSort.value === 'datum') return db.localeCompare(da) || (sb - sa);
+          if (opDatum) return db.localeCompare(da) || (sb - sa);
           return (sb - sa) || db.localeCompare(da);
         }});
         gesorteerd.forEach(function (k) {{ lijst.appendChild(k); }});
+        plaatsDivider(gesorteerd, opDatum);
+        schrijfStaat();
       }}
 
-      [q, fType, fProfiel, fBron, fHybride, fLaag, fSort].forEach(function (el) {{
+      lijst.addEventListener('click', function (ev) {{
+        var btn = ev.target.closest ? ev.target.closest('.act') : null;
+        if (!btn) return;
+        var art = btn.closest('.vacature'), u = art.dataset.url;
+        if (!u) return;
+        if (btn.classList.contains('act-save')) {{
+          if (saved[u]) {{ delete saved[u]; btn.classList.remove('actief'); btn.textContent = '☆'; art.classList.remove('bewaard'); }}
+          else {{ saved[u] = nu; btn.classList.add('actief'); btn.textContent = '★'; art.classList.add('bewaard'); }}
+          store.set('vr_saved', saved);
+        }} else if (btn.classList.contains('act-hide')) {{
+          if (hidden[u]) delete hidden[u]; else hidden[u] = nu;
+          store.set('vr_hidden', hidden);
+        }}
+        pas();
+      }});
+
+      fReset.addEventListener('click', function () {{
+        Object.keys(controls).forEach(function (naam) {{
+          var el = controls[naam];
+          if (el.type === 'checkbox') el.checked = false; else el.value = '';
+        }});
+        pas();
+      }});
+
+      [q, fType, fProfiel, fBron, fHybride, fLaag, fNieuw, fBewaard, fVerborgen, fSort].forEach(function (el) {{
         el.addEventListener('input', pas);
         el.addEventListener('change', pas);
       }});
+      leesStaat();
       pas();
     }})();
   </script>
