@@ -184,9 +184,12 @@ bedrijventerreinen. Hybride werken is een harde eis.
 
 ```
 +35 titel prioriteit 1   +25 titel prioriteit 2   +20 werkzaamheden passen
-+15 locatie past         +15 hybride genoemd       +10 SaaS/tech/scale-up
++15 locatie past         +10 hybride genoemd       +10 SaaS/tech/scale-up
 +10 CRM/Salesforce/HubSpot   +10 proces/automatisering/rapportage
 +5  salaris boven voorkeursminimum
+titelmatch ook via kernwoorden (sterk=+35, medior=+25), zodat afwijkende
+woordvolgorde/varianten meetellen ('Medewerker Commerciële Binnendienst').
+vloer: titelmatch in een zoekgebied is altijd minstens 'mogelijk interessant'.
 -100 geen hybride   -100 te senior (manager/lead/hoofd/senior)
 -80 salaris onder 3300   -60 callcenter/telefonie   -60 koude acquisitie
 -50 harde sales targets  -40 alleen administratie

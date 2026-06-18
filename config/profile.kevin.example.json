@@ -92,7 +92,10 @@
         "Procescoördinator",
         "Proces Coordinator",
         "Sales Operations Specialist",
-        "Sales Operations Coördinator"
+        "Sales Operations Coördinator",
+        "Commercieel Medewerker Binnendienst",
+        "Sales Support Specialist",
+        "Customer Success Specialist"
       ],
       "priority_2_titles": [
         "Projectcoördinator",
@@ -107,12 +110,10 @@
         "Onboarding Specialist",
         "Customer Experience Specialist",
         "Community Operations Specialist",
-        "Commercieel Medewerker Binnendienst",
         "Commercieel Binnendienst Medewerker",
         "Commercieel Administratief Medewerker",
         "Commercieel Ondersteuner",
         "Medewerker Binnendienst",
-        "Sales Support Specialist",
         "Sales Support Medewerker",
         "Medewerker Sales Support",
         "Account Support Specialist",
@@ -125,7 +126,6 @@
         "Proces Specialist",
         "Procesmanager",
         "Data Analist",
-        "Customer Success Specialist",
         "Business Support Specialist"
       ],
       "location_requirements": [
@@ -166,7 +166,10 @@
         "Customer Success Operations Specialist",
         "Business Process Specialist",
         "Sales Operations Specialist",
-        "Sales Operations Coördinator"
+        "Sales Operations Coördinator",
+        "Commercieel Medewerker Binnendienst",
+        "Sales Support Specialist",
+        "Customer Success Specialist"
       ],
       "priority_2_titles": [
         "Projectcoördinator",
@@ -181,12 +184,10 @@
         "Onboarding Specialist",
         "Customer Experience Specialist",
         "Community Operations Specialist",
-        "Commercieel Medewerker Binnendienst",
         "Commercieel Binnendienst Medewerker",
         "Commercieel Administratief Medewerker",
         "Commercieel Ondersteuner",
         "Medewerker Binnendienst",
-        "Sales Support Specialist",
         "Sales Support Medewerker",
         "Medewerker Sales Support",
         "Partner Operations Specialist",
@@ -199,7 +200,6 @@
         "Proces Specialist",
         "Procesmanager",
         "Data Analist",
-        "Customer Success Specialist",
         "Business Support Specialist"
       ],
       "location_requirements": [

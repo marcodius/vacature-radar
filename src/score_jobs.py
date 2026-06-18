@@ -293,6 +293,36 @@ def titel_match(titel, titels):
     return None
 
 
+# Kernwoord-titelmatch: vangt varianten/andere woordvolgorde die de vaste
+# titellijst mist (bijv. "Medewerker Commerciële Binnendienst", "CRM-beheerder",
+# "Sales Support Officer"). Woordgrens-match, zodat 'order' niet in 'borderel'
+# raakt. STERK = prioriteit-1-niveau, MEDIOR = prioriteit-2-niveau.
+TITEL_KERN_STERK = [
+    "crm", "salesforce", "hubspot", "revenue operations", "revops",
+    "sales operations", "business operations", "customer operations",
+    "binnendienst", "sales support", "customer success",
+]
+TITEL_KERN_MEDIOR = [
+    "operations", "operationeel", "implementatie", "implementation",
+    "projectcoördinator", "projectcoordinator", "project coordinator",
+    "procescoördinator", "procescoordinator", "proces coordinator",
+    "commercieel ondersteun", "business support", "data analist",
+    "data-analist", "order",
+]
+
+
+def kern_titelmatch(titel):
+    """Geeft 'sterk', 'medior' of None op basis van kernwoorden in de titel."""
+    t = (titel or "").lower()
+    for kw in TITEL_KERN_STERK:
+        if _bevat_woord(t, kw):
+            return "sterk", kw
+    for kw in TITEL_KERN_MEDIOR:
+        if _bevat_woord(t, kw):
+            return "medior", kw
+    return None, None
+
+
 def kies_profiel(tekst, profielen):
     """Wijs het zoekprofiel toe op basis van locatie. Geeft (profiel, gematchte_locatie)."""
     for profiel in profielen:
@@ -361,8 +391,8 @@ def score_uitgebreid(vacature, profiel_config):
         score -= 100
         hard_dealbreaker = True
     elif hybride is True:
-        score += 15
-        redenen.append("Hybride werken expliciet genoemd (+15)")
+        score += 10
+        redenen.append("Hybride werken expliciet genoemd (+10)")
     else:
         waarschuwingen.append("Hybride werken niet vermeld in de vacature")
 
@@ -413,12 +443,26 @@ def score_uitgebreid(vacature, profiel_config):
 
     m1 = titel_match(titel, p1)
     m2 = titel_match(titel, p2)
+    titel_gematcht = False
     if m1:
         score += 35
         redenen.append(f"Titel matcht prioriteit 1: '{m1}' (+35)")
+        titel_gematcht = True
     elif m2:
         score += 25
         redenen.append(f"Titel matcht prioriteit 2: '{m2}' (+25)")
+        titel_gematcht = True
+    else:
+        # Geen exacte titelmatch: val terug op kernwoorden in de titel.
+        kern, kw = kern_titelmatch(titel)
+        if kern == "sterk":
+            score += 35
+            redenen.append(f"Titel bevat sterk kernwoord '{kw}' (+35)")
+            titel_gematcht = True
+        elif kern == "medior":
+            score += 25
+            redenen.append(f"Titel bevat kernwoord '{kw}' (+25)")
+            titel_gematcht = True
 
     # Nuance: Commercieel Medewerker Binnendienst.
     if "commercieel medewerker binnendienst" in titel.lower():
@@ -473,6 +517,13 @@ def score_uitgebreid(vacature, profiel_config):
     if _bevat(tekst, SLECHT_OV_TERMEN):
         score -= 25
         waarschuwingen.append("Mogelijk slecht bereikbaar met OV (-25)")
+
+    # Vloer: een titelmatch in een zoekgebied is altijd minstens 'mogelijk
+    # interessant', ook zonder extra signalen (mits geen dealbreaker).
+    if (titel_gematcht and loc_klasse == "zoekgebied"
+            and not hard_dealbreaker and score < 50):
+        score = 50
+        redenen.append("Titel + locatie in zoekgebied (minimaal getoond)")
 
     # Label bepalen (op basis van score, begrensd 0..100 voor weergave).
     weergave_score = max(0, min(100, score))
