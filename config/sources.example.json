@@ -391,7 +391,9 @@
       "delay_seconds": 0.2,
       "respect_robots_txt": false,
       "stop_on_block": true,
-      "_uitleg": "Publieke LinkedIn guest jobs zoekresultaten. Gebruikt geen login, cookies of browser-automation.",
+      "fetch_details": true,
+      "max_detail_pages": 50,
+      "_uitleg": "Publieke LinkedIn guest jobs zoekresultaten + detailverrijking via de guest jobPosting-endpoint (volledige omschrijving -> hybride/salaris/inhoud, dus volwaardige score i.p.v. titel-only). Geen login/cookies. Stopt netjes bij 429.",
       "queries": [
         "crm",
         "sales support",

@@ -5,6 +5,7 @@ cookies, sessietokens of browser-automation; blokkades worden door _polite
 netjes afgevangen.
 """
 
+import re
 from urllib.parse import urlencode, urljoin, urlparse, urlunparse
 
 from . import _polite
@@ -12,6 +13,8 @@ from . import _polite
 NAAM = "LinkedIn"
 BASIS = "https://www.linkedin.com"
 ZOEK_URL = "https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search"
+# Guest-endpoint met de volledige vacaturetekst (geen login nodig).
+DETAIL_URL = "https://www.linkedin.com/jobs-guest/jobs/api/jobPosting/"
 
 
 def _schone_url(url):
@@ -96,6 +99,50 @@ def _parse(html):
     return resultaat
 
 
+def _job_id(url):
+    # LinkedIn-URL's zijn /jobs/view/{slug}-{id} of /jobs/view/{id}; het id is
+    # de lange cijferreeks (meestal 10 cijfers), doorgaans achteraan.
+    treffers = re.findall(r"\d{8,}", url or "")
+    return treffers[-1] if treffers else ""
+
+
+def _verrijk(vacatures, config):
+    """Vul de omschrijving aan via de guest-detailendpoint, zodat LinkedIn-
+    vacatures volwaardig scoren (hybride, salaris, inhoud) i.p.v. titel-only.
+
+    Stopt netjes zodra LinkedIn blokkeert (429). detect_block_html staat uit:
+    de detailpagina bevat login-prompts die anders een valse blokkade geven.
+    """
+    try:
+        from bs4 import BeautifulSoup
+    except ImportError:
+        return
+    sessie = _polite.PoliteSession(NAAM, {**config, "detect_block_html": False})
+    limiet = int(config.get("max_detail_pages", 0))
+    verrijkt = 0
+    for v in vacatures:
+        if verrijkt >= limiet:
+            break
+        jid = _job_id(v.get("url"))
+        if not jid:
+            continue
+        try:
+            html = sessie.get(DETAIL_URL + jid)
+        except _polite.Geblokkeerd as blok:
+            print(f"[LinkedIn] Detailverrijking gestopt ({blok}).")
+            break
+        if not html:
+            continue
+        soup = BeautifulSoup(html, "html.parser")
+        body = soup.select_one(".show-more-less-html__markup, .description__text")
+        tekst = " ".join((body.get_text(" ", strip=True) if body else "").split())
+        if tekst:
+            v["omschrijving"] = tekst[:12000]
+            verrijkt += 1
+    if verrijkt:
+        print(f"[LinkedIn] {verrijkt} detailpagina's verrijkt.")
+
+
 def fetch(config):
     htmls = _polite.haal_pagina_html(NAAM, _page_urls(config), config)
     gezien, resultaat = set(), []
@@ -105,6 +152,8 @@ def fetch(config):
                 continue
             gezien.add(vacature["url"])
             resultaat.append(vacature)
-    resultaat = _polite.unieke_vacatures(resultaat)
+    resultaat = _polite.unieke_vacatures(resultaat)[: config.get("max_resultaten", 100)]
     print(f"[LinkedIn] {len(resultaat)} vacatures uit {len(htmls)} pagina('s).")
-    return resultaat[: config.get("max_resultaten", 100)]
+    if config.get("fetch_details"):
+        _verrijk(resultaat, config)
+    return resultaat
