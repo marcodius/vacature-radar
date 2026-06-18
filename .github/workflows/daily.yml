@@ -2,11 +2,15 @@ name: Dagelijkse vacatures
 
 on:
   schedule:
-    # Dagelijks rond 06:17 UTC (~07:17 winter / 08:17 zomer, NL-tijd). Bewust
-    # NIET op het hele uur: GitHub stelt cron-runs op :00 vaker uit of slaat ze
-    # over (piekdrukte). Een off-peak minuut is betrouwbaarder. GitHub garandeert
-    # de tijd sowieso niet exact; workflow_dispatch blijft als handmatige trigger.
-    - cron: "17 6 * * *"
+    # GitHub-cron is best-effort: runs komen soms uren te laat of vallen weg
+    # (op 18-06 liep de 06:17-run pas om 10:46). Daarom MEERDERE pogingen vroeg
+    # in de ochtend (UTC), op off-peak minuten. De eerste die draait zorgt voor
+    # verse data ruim voor de NL-ochtend; de latere zijn vangnet. De pijplijn is
+    # idempotent (bouwt steeds de site opnieuw), dus extra runs zijn onschadelijk.
+    # 03:11 UTC (~05:11 NL zomer) en 05:11 / 07:11 UTC als terugval.
+    - cron: "11 3 * * *"
+    - cron: "11 5 * * *"
+    - cron: "11 7 * * *"
   workflow_dispatch: {}
   push:
     branches: [main]

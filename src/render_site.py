@@ -30,9 +30,10 @@ PUBLIC_DIR = os.path.join(PROJECT_DIR, "public")
 
 DREMPEL = 50  # score waarboven een vacature standaard als topmatch telt
 
-# De fetch draait dagelijks via GitHub Actions cron "17 6 * * *" (UTC).
-FETCH_CRON_UUR_UTC = 6
-FETCH_CRON_MINUUT_UTC = 17
+# De fetch draait dagelijks via GitHub Actions; eerste cron-poging 03:11 UTC
+# (met latere terugval-pogingen). GitHub-cron kan vertragen, vandaar 'rond'.
+FETCH_CRON_UUR_UTC = 3
+FETCH_CRON_MINUUT_UTC = 11
 WEEKDAGEN = ["maandag", "dinsdag", "woensdag", "donderdag", "vrijdag",
              "zaterdag", "zondag"]
 MAANDEN = ["januari", "februari", "maart", "april", "mei", "juni", "juli",
