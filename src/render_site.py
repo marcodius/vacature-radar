@@ -419,8 +419,31 @@ def main():
     footer {{ margin-top: 2rem; color: #999; font-size: 0.83rem; }}
 
     @media (max-width: 560px) {{
-      .stats {{ grid-template-columns: repeat(2, 1fr); }}
-      .filters select, .filters input[type=search] {{ flex: 1 1 100%; }}
+      body {{ padding: 0.7rem; }}
+      h1 {{ font-size: 1.35rem; }}
+      .uitleg {{ font-size: 0.9rem; }}
+      .tijden {{ font-size: 0.8rem; }}
+      /* Compactere statchips. */
+      .stats {{ grid-template-columns: repeat(2, 1fr); gap: 0.5rem; margin: 0.8rem 0; }}
+      .stat {{ padding: 0.5rem; }}
+      .stat-getal {{ font-size: 1.2rem; }}
+      .stat-label {{ font-size: 0.7rem; }}
+      /* Filters: zoekveld vol, selects in 2 kolommen, kleinere checkboxes. */
+      .filters {{ gap: 0.4rem; }}
+      .filters input[type=search] {{ flex: 1 1 100%; }}
+      .filters select {{ flex: 1 1 calc(50% - 0.2rem); min-width: 0; }}
+      .checkbox {{ flex: 1 1 calc(50% - 0.2rem); font-size: 0.85rem; }}
+      .reset {{ flex: 1 1 100%; text-align: left; }}
+      /* Kaartkop: titel volle breedte; herkomst + acties op eigen regel eronder. */
+      .kop {{ flex-wrap: wrap; gap: 0.5rem; }}
+      .kop-tekst {{ flex: 1 1 0; }}
+      .kop-rechts {{ flex: 1 1 100%; flex-direction: row; align-items: center;
+        justify-content: space-between; margin-top: 0.1rem; }}
+      .herkomst {{ text-align: left; order: -1; }}
+      .herkomst-bedrijf, .herkomst-bron {{ display: inline; }}
+      .herkomst-bron {{ margin-left: 0.3rem; }}
+      .act {{ width: 2.1rem; height: 2.1rem; font-size: 1rem; }}
+      .vacature {{ padding: 0.8rem 0.85rem; }}
     }}
   </style>
 </head>
