@@ -250,38 +250,37 @@ def te_senior(titel):
 # Opleidingseis: Kevin heeft GEEN afgerond HBO, maar zit wél op HBO-denkniveau.
 # "HBO werk- en denkniveau" is dus prima; een expliciet vereist AFGEROND diploma
 # is een aandachtspunt (waarschuwing + strafpunten, geen harde uitsluiting).
-# WO/universitair weegt zwaarder dan HBO. De patronen eisen altijd een
-# afgerond/diploma-context, zodat "hbo denkniveau" niet onterecht straft.
-HBO_DIPLOMA_PATRONEN = [
-    r"afgeronde?\s+hbo",
-    r"afgeronde?\s+bachelor",
-    r"voltooide?\s+hbo",
-    r"hbo[-\s]?diploma",
-    r"hbo[-\s]?bachelor",
-    r"hbo\s+gediplomeerd",
-    r"in het bezit van een\s+hbo",
-    r"minimaal\s+(een\s+)?afgeronde?\s+hbo",
-]
-WO_DIPLOMA_PATRONEN = [
-    r"afgeronde?\s+(wo|universitair\w*|academisch\w*|master)",
-    r"voltooide?\s+(wo|universitair\w*|academisch\w*|master)",
-    r"\bwo[-\s]?diploma",
-    r"universitair\w*\s+(diploma|opleiding)",
-    r"academisch\w*\s+(diploma|opleiding)",
-    r"master[-\s]?diploma",
-    r"in het bezit van een\s+(wo|universitair|master)",
+# WO/universitair weegt zwaarder dan HBO.
+#
+# We detecteren een diploma-eis robuust (beide woordvolgordes, op nabijheid):
+# - "diploma"/"gediplomeerd"/"in het bezit van" vlak bij een opleidingsniveau
+#   ("diploma op HBO en/of WO niveau", "hbo-diploma", "in bezit van wo-diploma");
+# - "afgeronde/voltooide" + niveau/opleiding/studie ("afgeronde hbo-opleiding").
+# "HBO (werk- en) denkniveau" zonder zo'n diploma-context straft NIET.
+_EDU = r"(?:\bhbo\b|\bwo\b|universitair\w*|academisch\w*|\bbachelor\b|\bmaster\b)"
+_DIPLOMA_PATRONEN = [
+    r"\bdiploma\b.{0,30}?" + _EDU,
+    _EDU + r".{0,30}?\bdiploma\b",
+    r"\bgediplomeerd\b",
+    r"in het bezit van (?:een )?\w*\s*" + _EDU,
+    r"\b(?:afgeronde?|voltooide?)\b.{0,20}?(?:" + _EDU + r"|\bopleiding\b|\bstudie\b)",
+    r"(?:" + _EDU + r"|\bopleiding\b|\bstudie\b).{0,15}?\b(?:afgerond|voltooid)\b",
+    # '{niveau}-opleiding' als directe eis ('universitaire opleiding', 'hbo-opleiding')
+    r"(?:hbo|wo|universitair\w*|academisch\w*)[-\s]?opleiding",
 ]
 
 
 def diploma_eis(tekst):
     """Detecteer een expliciet vereist afgerond diploma. Geeft (straf, waarschuwing)."""
-    if any(re.search(p, tekst) for p in WO_DIPLOMA_PATRONEN):
+    if not any(re.search(p, tekst) for p in _DIPLOMA_PATRONEN):
+        return 0, None
+    # WO/universitair/academisch weegt zwaarder; 'master'/'bachelor' niet als
+    # WO-signaal (vermijdt valse hits op bijv. 'master data').
+    if re.search(r"\bwo\b|universitair\w*|academisch\w*", tekst):
         return -25, ("Vraagt mogelijk een afgeronde WO/universitaire opleiding "
                      "(Kevin heeft HBO-denkniveau, geen diploma)")
-    if any(re.search(p, tekst) for p in HBO_DIPLOMA_PATRONEN):
-        return -15, ("Vraagt mogelijk een afgeronde HBO-opleiding "
-                     "(Kevin heeft HBO-denkniveau, geen diploma)")
-    return 0, None
+    return -15, ("Vraagt mogelijk een afgeronde HBO-opleiding "
+                 "(Kevin heeft HBO-denkniveau, geen diploma)")
 
 
 def titel_match(titel, titels):
