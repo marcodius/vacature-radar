@@ -4,10 +4,10 @@ on:
   schedule:
     # GitHub-cron is best-effort: runs komen soms uren te laat of vallen weg
     # (op 18-06 liep de 06:17-run pas om 10:46). Daarom MEERDERE pogingen vroeg
-    # in de ochtend (UTC), op off-peak minuten. De eerste die draait zorgt voor
-    # verse data ruim voor de NL-ochtend; de latere zijn vangnet. De pijplijn is
-    # idempotent (bouwt steeds de site opnieuw), dus extra runs zijn onschadelijk.
-    # 03:11 UTC (~05:11 NL zomer) en 05:11 / 07:11 UTC als terugval.
+    # in de ochtend (UTC), op off-peak minuten: 03:11 / 05:11 / 07:11 UTC
+    # (~05:11/07:11/09:11 NL zomer). De 'guard'-job hieronder zorgt dat een latere
+    # poging zichzelf overslaat als er die dag (UTC) al een geslaagde run was;
+    # bij een mislukte vroege run draait de vangnet-poging wél (retry).
     - cron: "11 3 * * *"
     - cron: "11 5 * * *"
     - cron: "11 7 * * *"
@@ -19,6 +19,7 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  actions: read
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
@@ -28,7 +29,37 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  guard:
+    # Voorkomt dubbele dagelijkse runs: een latere cron-poging slaat zichzelf
+    # over als er die dag (UTC) al een geslaagde run was. Push/handmatig draaien
+    # altijd; een mislukte vroege run blokkeert de vangnet-poging niet.
+    runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ steps.check.outputs.should_run }}
+    steps:
+      - id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "${{ github.event_name }}" != "schedule" ]; then
+            echo "Event '${{ github.event_name }}': altijd draaien."
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          today=$(date -u +%Y-%m-%d)
+          succes=$(gh api "repos/${{ github.repository }}/actions/workflows/daily.yml/runs?per_page=100" \
+            --jq "[.workflow_runs[] | select(.conclusion==\"success\") | select(.created_at | startswith(\"$today\"))] | length")
+          echo "Geslaagde runs vandaag ($today): ${succes:-0}"
+          if [ "${succes:-0}" -ge 1 ]; then
+            echo "Er was vandaag al een geslaagde run -> deze poging slaat zichzelf over."
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+          fi
+
   build:
+    needs: guard
+    if: needs.guard.outputs.should_run == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
