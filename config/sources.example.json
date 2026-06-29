@@ -63,15 +63,16 @@
       "stop_on_block": true,
       "_uitleg": "Automatisch ophalen is toegestaan; gebruik deze statische scraper of schakel over op sitemap/gerenderde parsing wanneer HTML te weinig data bevat.",
       "queries": [
+        "commercieel medewerker binnendienst",
+        "binnendienst",
         "crm",
-        "sales support",
-        "business development",
-        "accountmanager",
+        "salesforce",
         "customer success",
-        "operations",
+        "sales support",
+        "operations specialist",
         "sales operations",
         "hubspot",
-        "salesforce"
+        "implementatie consultant"
       ],
       "locations": [
         "Nederland",
@@ -125,15 +126,16 @@
       },
       "_uitleg": "Statische HTML bevat vacaturelinks. 'query' = zoekterm (Randstad-parameter 'zoekterm').",
       "queries": [
+        "commercieel medewerker binnendienst",
+        "binnendienst",
         "crm",
-        "sales support",
-        "business development",
-        "accountmanager",
+        "salesforce",
         "customer success",
-        "operations",
+        "sales support",
+        "operations specialist",
         "sales operations",
         "hubspot",
-        "salesforce"
+        "implementatie consultant"
       ],
       "locations": [
         "Nederland",
@@ -158,15 +160,16 @@
       "stop_on_block": true,
       "_uitleg": "Automatisch ophalen is toegestaan; gebruik categorie-/zoekpagina's of sitemap zodra het vacaturedetail-URL-patroon bekend is.",
       "queries": [
+        "commercieel medewerker binnendienst",
+        "binnendienst",
         "crm",
-        "sales support",
-        "business development",
-        "accountmanager",
+        "salesforce",
         "customer success",
-        "operations",
+        "sales support",
+        "operations specialist",
         "sales operations",
         "hubspot",
-        "salesforce"
+        "implementatie consultant"
       ],
       "locations": [
         "Nederland",
@@ -395,15 +398,16 @@
       "max_detail_pages": 50,
       "_uitleg": "Publieke LinkedIn guest jobs zoekresultaten + detailverrijking via de guest jobPosting-endpoint (volledige omschrijving -> hybride/salaris/inhoud, dus volwaardige score i.p.v. titel-only). Geen login/cookies. Stopt netjes bij 429.",
       "queries": [
+        "commercieel medewerker binnendienst",
+        "binnendienst",
         "crm",
-        "sales support",
-        "business development",
-        "accountmanager",
+        "salesforce",
         "customer success",
-        "operations",
+        "sales support",
+        "operations specialist",
         "sales operations",
         "hubspot",
-        "salesforce"
+        "implementatie consultant"
       ],
       "locations": [
         "Nederland",
@@ -433,11 +437,12 @@
       "filter_relevant": true,
       "_uitleg": "Best-effort via headless browser (zie scrape/indeed.py): parseert het ingebedde mosaic-jobcards-JSON op de zoekresultaatpagina. Indeed blokkeert datacenter-IP's (GitHub-runners) actiever dan residentiële IP's, dus in CI kan dit 0 opleveren — dan blijft handmatige import (data/manual_links.json) de fallback. Per zoekgebied gezocht zodat resultaten lokaal zijn; delay iets hoger om blokkades te beperken.",
       "queries": [
+        "commercieel medewerker binnendienst",
         "crm",
-        "operations specialist",
-        "sales support",
         "salesforce",
-        "customer success"
+        "customer success",
+        "sales support",
+        "operations specialist"
       ],
       "locations": [
         "Amsterdam",
@@ -474,15 +479,16 @@
       "page_step": 1,
       "detail_bevat": "/vacature/",
       "queries": [
+        "commercieel medewerker binnendienst",
+        "binnendienst",
         "crm",
-        "sales support",
-        "business development",
-        "accountmanager",
+        "salesforce",
         "customer success",
-        "operations",
+        "sales support",
+        "operations specialist",
         "sales operations",
         "hubspot",
-        "salesforce"
+        "implementatie consultant"
       ],
       "locations": [
         "Nederland",
@@ -515,15 +521,16 @@
       "page_step": 1,
       "detail_bevat": "/view",
       "queries": [
+        "commercieel medewerker binnendienst",
+        "binnendienst",
         "crm",
-        "sales support",
-        "business development",
-        "accountmanager",
+        "salesforce",
         "customer success",
-        "operations",
+        "sales support",
+        "operations specialist",
         "sales operations",
         "hubspot",
-        "salesforce"
+        "implementatie consultant"
       ],
       "locations": [
         "Nederland",
@@ -557,15 +564,16 @@
       "page_step": 1,
       "detail_bevat": "/jobpreview/",
       "queries": [
+        "commercieel medewerker binnendienst",
+        "binnendienst",
         "crm",
-        "sales support",
-        "business development",
-        "accountmanager",
+        "salesforce",
         "customer success",
-        "operations",
+        "sales support",
+        "operations specialist",
         "sales operations",
         "hubspot",
-        "salesforce"
+        "implementatie consultant"
       ],
       "locations": [
         "Nederland",
@@ -599,15 +607,16 @@
       "page_step": 1,
       "detail_bevat": "/job/",
       "queries": [
+        "commercieel medewerker binnendienst",
+        "binnendienst",
         "crm",
-        "sales support",
-        "business development",
-        "accountmanager",
+        "salesforce",
         "customer success",
-        "operations",
+        "sales support",
+        "operations specialist",
         "sales operations",
         "hubspot",
-        "salesforce"
+        "implementatie consultant"
       ],
       "locations": [
         "Nederland",
@@ -642,15 +651,16 @@
       "page_step": 1,
       "detail_bevat": "/vacature/",
       "queries": [
+        "commercieel medewerker binnendienst",
+        "binnendienst",
         "crm",
-        "sales support",
-        "business development",
-        "accountmanager",
+        "salesforce",
         "customer success",
-        "operations",
+        "sales support",
+        "operations specialist",
         "sales operations",
         "hubspot",
-        "salesforce"
+        "implementatie consultant"
       ],
       "locations": [
         "Nederland",
