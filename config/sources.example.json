@@ -409,15 +409,16 @@
       "query": "crm",
       "location": "Nederland",
       "distance": 25,
-      "max_pages": 2,
-      "delay_seconds": 0.2,
+      "max_pages": 3,
+      "delay_seconds": 1.5,
+      "list_backoff_seconds": 15,
       "respect_robots_txt": false,
       "stop_on_block": true,
       "fetch_details": true,
-      "max_detail_pages": 80,
+      "max_detail_pages": 120,
       "detail_delay_seconds": 2.0,
       "detail_backoff_seconds": 15,
-      "_uitleg": "Publieke LinkedIn guest jobs zoekresultaten + detailverrijking via de guest jobPosting-endpoint (volledige omschrijving -> hybride/salaris/inhoud). De detailendpoint 429't bij snelle bursts; daarom detail_delay_seconds ~2s + bij 429 detail_backoff_seconds backoff/retry i.p.v. stoppen, en de kansrijkste titels eerst. Op datacenter-IP (CI) blijft 429 mogelijk; dan vangen de score-vloer en de handmatige pin het op. Geen login/cookies.",
+      "_uitleg": "Publieke LinkedIn guest jobs. ZOWEL de lijst- als de detail-endpoint 429't bij snelle bursts; daarom een rustige delay (lijst 1.5s, detail 2s) + bij 429 backoff/retry i.p.v. direct hard stoppen (list_backoff_seconds/detail_backoff_seconds). Zo halen we veel meer zoekpagina's én detailverrijkingen binnen vóór een eventuele blokkade; de kansrijkste titels worden eerst verrijkt. Op datacenter-IP (CI) blijft 429 mogelijk; dan vangen de score-vloer en de handmatige pin het op. Geen login/cookies.",
       "queries": [
         "commercieel medewerker binnendienst",
         "binnendienst",
@@ -440,7 +441,7 @@
         "Ede"
       ],
       "max_resultaten": 300,
-      "max_fetch_pages": 80
+      "max_fetch_pages": 120
     },
     "indeed": {
       "enabled": true,

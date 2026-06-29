@@ -173,8 +173,39 @@ def _verrijk(vacatures, config):
         print(f"[LinkedIn] {verrijkt} detailpagina's verrijkt.")
 
 
+def _haal_lijst(config):
+    """Haal de zoekresultaatpagina's met backoff i.p.v. hard stoppen bij 429.
+
+    De lijst-endpoint (seeMoreJobPostings) 429't bij snelle bursts (delay 0.2);
+    met een rustigere delay + backoff/retry halen we veel meer pagina's binnen
+    vóór een eventuele harde blokkade. Stopt pas na herhaalde 429 op rij."""
+    sessie = _polite.PoliteSession(NAAM, config)
+    backoff = float(config.get("list_backoff_seconds", 15))
+    urls = _page_urls(config)
+    max_fetch = int(config.get("max_fetch_pages", len(urls)))
+    htmls, mislukt_op_rij = [], 0
+    for url in urls[:max_fetch]:
+        html = None
+        for poging in range(2):  # normale poging + één na backoff
+            try:
+                html = sessie.get(url)
+                break
+            except _polite.Geblokkeerd:
+                if poging == 0:
+                    time.sleep(backoff)
+        if html is None:
+            mislukt_op_rij += 1
+            if mislukt_op_rij >= 2:
+                print("[LinkedIn] Lijst-ophalen gestopt (herhaald 429 na backoff).")
+                break
+            continue
+        mislukt_op_rij = 0
+        htmls.append(html)
+    return htmls
+
+
 def fetch(config):
-    htmls = _polite.haal_pagina_html(NAAM, _page_urls(config), config)
+    htmls = _haal_lijst(config)
     gezien, resultaat = set(), []
     for html in htmls:
         for vacature in _parse(html):
