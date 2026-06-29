@@ -2,7 +2,6 @@
 config/profile.json
 config/profile.kevin.json
 config/sources.json
-data/manual_links.json
 
 # Gegenereerde tussenbestanden
 data/jobs_raw.json

@@ -20,6 +20,41 @@ PROJECT_DIR = os.path.dirname(
 )
 DATA_PAD = os.path.join(PROJECT_DIR, "data", "manual_links.json")
 
+
+def _verrijk_linkedin(vacature):
+    """Vul de omschrijving van een gepinde LinkedIn-vacature aan via de guest-
+    endpoint, zodat hij volwaardig scoort i.p.v. alleen op titel+locatie. Faalt
+    stil (dan blijft de vacature gewoon zichtbaar via de score-vloer)."""
+    url = vacature.get("url", "")
+    if "linkedin.com/jobs/view/" not in url:
+        return
+    if len((vacature.get("omschrijving") or "").strip()) >= 200:
+        return
+    try:
+        import requests
+        from bs4 import BeautifulSoup
+
+        from providers.scrape import linkedin as li
+        jid = li._job_id(url)
+        if not jid:
+            return
+        resp = requests.get(
+            li.DETAIL_URL + jid,
+            headers={"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                     "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+                     "Accept-Language": "nl-NL,nl;q=0.9"},
+            timeout=20,
+        )
+        if resp.status_code != 200:
+            return
+        body = BeautifulSoup(resp.text, "html.parser").select_one(
+            ".show-more-less-html__markup, .description__text")
+        tekst = " ".join((body.get_text(" ", strip=True) if body else "").split())
+        if tekst:
+            vacature["omschrijving"] = tekst[:12000]
+    except Exception:  # noqa: BLE001
+        pass
+
 BRON_LABEL = {
     "linkedin_manual": "LinkedIn (handmatig)",
     "indeed_manual": "Indeed (handmatig)",
@@ -64,4 +99,9 @@ def fetch(config):
         i for i in items
         if i.get("source", "linkedin_manual") == bron_key
     ]
-    return [_normaliseer(i, bron_key) for i in geselecteerd]
+    resultaat = [_normaliseer(i, bron_key) for i in geselecteerd]
+    if bron_key == "linkedin_manual":
+        for v in resultaat:
+            _verrijk_linkedin(v)
+    print(f"[Manual] {len(resultaat)} handmatige link(s) voor {bron_key}.")
+    return resultaat
