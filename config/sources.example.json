@@ -396,7 +396,9 @@
       "stop_on_block": true,
       "fetch_details": true,
       "max_detail_pages": 50,
-      "_uitleg": "Publieke LinkedIn guest jobs zoekresultaten + detailverrijking via de guest jobPosting-endpoint (volledige omschrijving -> hybride/salaris/inhoud, dus volwaardige score i.p.v. titel-only). Geen login/cookies. Stopt netjes bij 429.",
+      "detail_delay_seconds": 2.0,
+      "detail_backoff_seconds": 15,
+      "_uitleg": "Publieke LinkedIn guest jobs zoekresultaten + detailverrijking via de guest jobPosting-endpoint (volledige omschrijving -> hybride/salaris/inhoud). De detailendpoint 429't bij snelle bursts; daarom detail_delay_seconds ~2s + bij 429 detail_backoff_seconds backoff/retry i.p.v. stoppen, en de kansrijkste titels eerst. Op datacenter-IP (CI) blijft 429 mogelijk; dan vangen de score-vloer en de handmatige pin het op. Geen login/cookies.",
       "queries": [
         "commercieel medewerker binnendienst",
         "binnendienst",
@@ -435,7 +437,9 @@
       "render_timeout_ms": 30000,
       "render_wait": "domcontentloaded",
       "filter_relevant": true,
-      "_uitleg": "Best-effort via headless browser (zie scrape/indeed.py): parseert het ingebedde mosaic-jobcards-JSON op de zoekresultaatpagina. Indeed blokkeert datacenter-IP's (GitHub-runners) actiever dan residentiële IP's, dus in CI kan dit 0 opleveren — dan blijft handmatige import (data/manual_links.json) de fallback. Per zoekgebied gezocht zodat resultaten lokaal zijn; delay iets hoger om blokkades te beperken.",
+      "proxy": false,
+      "proxy_endpoint": "https://api.scraperapi.com/?api_key={key}&render=true&url={url}",
+      "_uitleg": "Best-effort via headless browser (zie scrape/indeed.py): parseert het ingebedde mosaic-jobcards-JSON. Indeed blokkeert datacenter-IP's (GitHub-runners), dus in CI levert de directe route vaak 0 — dan blijft handmatige import de fallback. Optioneel: zet 'proxy': true en een GitHub Secret INDEED_PROXY_KEY (scraping-API met residentieel IP + render, bijv. ScraperAPI); dan lopen de zoekpagina's daardoorheen en werkt het ook in CI. Let op: gratis tiers dekken het volume (queries × zoekgebieden) meestal niet duurzaam — verlaag dan queries/locations. Zonder secret: ongewijzigd gedrag.",
       "queries": [
         "commercieel medewerker binnendienst",
         "crm",
@@ -465,11 +469,12 @@
       "priority": 91
     },
     "intermediair": {
-      "enabled": true,
+      "enabled": false,
       "type": "polite_scrape",
       "country": "NL",
       "priority": 11,
       "naam": "Intermediair",
+      "_reden_uit": "Geverifieerd (juni 2026): intermediair.nl (DPG) redirect elke request (302) naar myprivacy.dpgmedia.nl/consent; je krijgt de consent-pagina i.p.v. zoekresultaten, dus 0 vacatures. Niet te scrapen zonder consent-cookie via een headless browser; overlapt bovendien met werkende bronnen.",
       "base_url": "https://www.intermediair.nl/vacatures",
       "basis_url": "https://www.intermediair.nl",
       "query_param": "zoekterm",

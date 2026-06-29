@@ -87,6 +87,9 @@ jobs:
           ADZUNA_APP_ID: ${{ secrets.ADZUNA_APP_ID }}
           ADZUNA_APP_KEY: ${{ secrets.ADZUNA_APP_KEY }}
           JOOBLE_API_KEY: ${{ secrets.JOOBLE_API_KEY }}
+          # Optioneel: scraping-/proxy-API-sleutel om Indeed ook in CI te laten
+          # werken (zet daarnaast "proxy": true in de indeed-bronconfig).
+          INDEED_PROXY_KEY: ${{ secrets.INDEED_PROXY_KEY }}
         run: python src/fetch_jobs.py
 
       - name: Vacatures scoren

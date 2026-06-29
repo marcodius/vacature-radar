@@ -6,6 +6,7 @@ netjes afgevangen.
 """
 
 import re
+import time
 from urllib.parse import urlencode, urljoin, urlparse, urlunparse
 
 from . import _polite
@@ -15,6 +16,13 @@ BASIS = "https://www.linkedin.com"
 ZOEK_URL = "https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search"
 # Guest-endpoint met de volledige vacaturetekst (geen login nodig).
 DETAIL_URL = "https://www.linkedin.com/jobs-guest/jobs/api/jobPosting/"
+# Kernwoorden om het (mogelijk krappe) verrijkingsbudget eerst aan de kansrijkste
+# titels te besteden vóór een eventuele 429.
+DETAIL_KERN_STERK = [
+    "crm", "salesforce", "hubspot", "binnendienst", "sales support",
+    "customer success", "operations specialist", "revenue operations",
+    "sales operations", "implementatie",
+]
 
 
 def _schone_url(url):
@@ -106,35 +114,57 @@ def _job_id(url):
     return treffers[-1] if treffers else ""
 
 
+def _detail_prioriteit(vacature):
+    """0 voor titels met een sterk kernwoord (eerst verrijken), anders 1."""
+    titel = (vacature.get("titel") or "").lower()
+    return 0 if any(kw in titel for kw in DETAIL_KERN_STERK) else 1
+
+
 def _verrijk(vacatures, config):
     """Vul de omschrijving aan via de guest-detailendpoint, zodat LinkedIn-
     vacatures volwaardig scoren (hybride, salaris, inhoud) i.p.v. titel-only.
 
-    Stopt netjes zodra LinkedIn blokkeert (429). detect_block_html staat uit:
-    de detailpagina bevat login-prompts die anders een valse blokkade geven.
+    De detailendpoint kent een korte burst-rate-limit: bij ~0.2s tussenpozen
+    429't hij na ~8 calls, maar bij een rustige delay (~2s) gaan tientallen calls
+    goed, en een 429 is een korte cooldown die na ~15s herstelt. Daarom: aparte
+    detail-delay, en bij 429 backoff + retry i.p.v. direct volledig stoppen. De
+    kansrijkste titels gaan eerst, zodat een krap budget goed wordt besteed.
+    detect_block_html staat uit (de detailpagina bevat login-prompts).
     """
     try:
         from bs4 import BeautifulSoup
     except ImportError:
         return
-    sessie = _polite.PoliteSession(NAAM, {**config, "detect_block_html": False})
+    detail_delay = float(config.get("detail_delay_seconds", 2.0))
+    backoff = float(config.get("detail_backoff_seconds", 15))
+    sessie = _polite.PoliteSession(
+        NAAM, {**config, "detect_block_html": False, "delay_seconds": detail_delay})
     limiet = int(config.get("max_detail_pages", 0))
-    verrijkt = 0
-    for v in vacatures:
+
+    kandidaten = sorted(
+        [v for v in vacatures if _job_id(v.get("url"))], key=_detail_prioriteit)
+    verrijkt = mislukt_op_rij = 0
+    for v in kandidaten:
         if verrijkt >= limiet:
             break
         jid = _job_id(v.get("url"))
-        if not jid:
+        html = None
+        for poging in range(2):  # normale poging + één na backoff
+            try:
+                html = sessie.get(DETAIL_URL + jid)
+                break
+            except _polite.Geblokkeerd:
+                if poging == 0:
+                    time.sleep(backoff)  # korte cooldown, geen harde blokkade
+        if html is None:
+            mislukt_op_rij += 1
+            if mislukt_op_rij >= 2:
+                print("[LinkedIn] Detailverrijking gestopt (herhaald 429 na backoff).")
+                break
             continue
-        try:
-            html = sessie.get(DETAIL_URL + jid)
-        except _polite.Geblokkeerd as blok:
-            print(f"[LinkedIn] Detailverrijking gestopt ({blok}).")
-            break
-        if not html:
-            continue
-        soup = BeautifulSoup(html, "html.parser")
-        body = soup.select_one(".show-more-less-html__markup, .description__text")
+        mislukt_op_rij = 0
+        body = BeautifulSoup(html, "html.parser").select_one(
+            ".show-more-less-html__markup, .description__text")
         tekst = " ".join((body.get_text(" ", strip=True) if body else "").split())
         if tekst:
             v["omschrijving"] = tekst[:12000]

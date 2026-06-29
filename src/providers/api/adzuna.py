@@ -6,11 +6,29 @@ Docs: https://developer.adzuna.com/
 """
 
 import os
+import time
 
 import requests
 
 NAAM = "Adzuna"
 API_URL = "https://api.adzuna.com/v1/api/jobs/nl/search/1"
+
+
+def _get_met_retry(params, pogingen=3):
+    """GET met backoff bij tijdelijke fouten (503/429/timeout). Geeft JSON of
+    None. Adzuna gaf in de praktijk losse 503's waardoor zoektermen wegvielen."""
+    for poging in range(pogingen):
+        try:
+            resp = requests.get(API_URL, params=params, timeout=30)
+            if resp.status_code in (429, 500, 502, 503, 504):
+                raise requests.HTTPError(f"HTTP {resp.status_code}")
+            resp.raise_for_status()
+            return resp.json()
+        except (requests.HTTPError, requests.Timeout, requests.ConnectionError):
+            if poging == pogingen - 1:
+                raise
+            time.sleep(2 ** poging)  # 1s, 2s, 4s
+    return None
 
 STANDAARD_TREFWOORDEN = [
     "Salesforce CRM HubSpot",
@@ -78,9 +96,8 @@ def fetch(config):
                 if distance:
                     params["distance"] = distance
             try:
-                response = requests.get(API_URL, params=params, timeout=30)
-                response.raise_for_status()
-                for item in (response.json().get("results") or []):
+                data = _get_met_retry(params)
+                for item in ((data or {}).get("results") or []):
                     v = _normaliseer(item)
                     if v["url"] and v["url"] in gezien:
                         continue

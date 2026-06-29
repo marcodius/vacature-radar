@@ -10,16 +10,27 @@ LET OP: Indeed blokkeert datacenter-IP's (zoals GitHub Actions-runners) actiever
 dan residentiële IP's. Deze provider is daarom best-effort: bij een blokkade of
 ontbrekend JSON-blok levert hij netjes 0 vacatures (geen crash). De DOM-parser
 blijft als fallback. Gebruikt geen login of cookies.
+
+Optionele proxy-route (voor CI): als de env var INDEED_PROXY_KEY aanwezig is én
+"proxy": true in de config staat, lopen de zoekpagina's via een scraping-/proxy-
+API met residentieel IP + JS-rendering (bijv. ScraperAPI met render=true). De
+response is dezelfde gerenderde HTML, dus dezelfde mosaic-parser werkt. Zonder de
+env var valt hij terug op de directe headless browser (huidig gedrag, vaak 0 in
+CI). Geen sleutel in code; alleen via Secret/environment.
 """
 
 import json
+import os
 import re
-from urllib.parse import parse_qs, urlencode, urljoin, urlparse
+from urllib.parse import parse_qs, quote_plus, urlencode, urljoin, urlparse
+
+import requests
 
 from . import _browser, _polite
 from .. import relevance
 
 NAAM = "Indeed"
+DEFAULT_PROXY_ENDPOINT = "https://api.scraperapi.com/?api_key={key}&render=true&url={url}"
 BASIS = "https://nl.indeed.com"
 ZOEK_URL = "https://nl.indeed.com/jobs"
 
@@ -121,14 +132,34 @@ def _parse_dom(html):
     return resultaat
 
 
+def _proxy_get(url, api_key, config):
+    """Haal de Indeed-zoekpagina via een scraping-/proxy-API (residentieel IP +
+    JS-render). Geeft gerenderde HTML of None."""
+    endpoint = config.get("proxy_endpoint", DEFAULT_PROXY_ENDPOINT)
+    req_url = endpoint.format(key=api_key, url=quote_plus(url))
+    try:
+        resp = requests.get(req_url, timeout=int(config.get("proxy_timeout", 90)))
+        if resp.status_code == 200 and resp.text:
+            return resp.text
+        print(f"[{NAAM}] Proxy HTTP {resp.status_code} voor zoekpagina.")
+    except Exception as fout:  # noqa: BLE001
+        print(f"[{NAAM}] Proxy-request mislukt: {fout}.")
+    return None
+
+
 def fetch(config):
-    # Indeed vereist een echte browser; render altijd via Playwright.
-    config = {**config, "render_wait": config.get("render_wait", "domcontentloaded")}
-    renderer = _browser.BrowserRenderer(NAAM, config)
+    # Optionele proxy-route (secret-gated); anders de directe headless browser.
+    proxy_key = os.environ.get(config.get("proxy_key_env", "INDEED_PROXY_KEY"))
+    gebruik_proxy = bool(proxy_key) and config.get("proxy", False)
+    renderer = None
+    if not gebruik_proxy:
+        config = {**config, "render_wait": config.get("render_wait", "domcontentloaded")}
+        renderer = _browser.BrowserRenderer(NAAM, config)
+
     gezien, resultaat = set(), []
     paginas, met_data = 0, 0
     for url in _page_urls(config):
-        html = renderer.get(url)
+        html = _proxy_get(url, proxy_key, config) if gebruik_proxy else renderer.get(url)
         if not html:
             continue
         paginas += 1
@@ -140,7 +171,7 @@ def fetch(config):
                 continue
             gezien.add(v["url"])
             resultaat.append(v)
-    if hasattr(renderer, "close"):
+    if renderer is not None and hasattr(renderer, "close"):
         renderer.close()
 
     filter_aan, trefwoorden = relevance.filter_config(config)

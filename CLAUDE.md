@@ -104,10 +104,18 @@ Tempo-Team- en Magnet.me-sitemaps, Randstad, YoungCapital, LinkedIn (vaak 429),
 Talent.com, Jobrapido, Indeed (best-effort via headless browser), en de API's
 Jooble + Adzuna (per zoekgebied × zoekterm, sleutels via Secrets). Extra gratis API's Arbeitnow en Jobicy staan aan (weinig NL-rendement
 onder de strikte locatieregel). RSS staat uit tot er echte feed-URL's zijn
-ingevuld. Geblokkeerd/uit: werk.nl, SimplyHired (anti-bot/Cloudflare) en Joblift (404,
-gewijzigde URL-structuur). Voor LinkedIn/Indeed blijft handmatige import
-(`data/manual_links.json`) de fallback als de geautomatiseerde route geblokkeerd
-wordt.
+ingevuld. Geblokkeerd/uit: werk.nl, SimplyHired (anti-bot/Cloudflare), Intermediair (DPG
+consent-wall: 302 naar myprivacy.dpgmedia.nl) en Joblift (404, gewijzigde
+URL-structuur). Talent.com heeft een eigen parser (`scrape/talent.py`); de
+generieke scraper pakte daar de knop 'Laat meer zien' i.p.v. de titel.
+
+LinkedIn-vacatures worden verrijkt via de guest-detailendpoint met een rustige
+detail-delay (~2s) + backoff/retry bij 429 (de endpoint 429't bij snelle bursts);
+op datacenter-IP (CI) blijft 429 mogelijk, dan vangen de score-vloer en de
+handmatige pin het op. Indeed kan optioneel via een scraping-/proxy-API met
+residentieel IP draaien (`"proxy": true` + Secret `INDEED_PROXY_KEY`); zonder die
+secret is het de directe headless browser (vaak 0 in CI). Voor LinkedIn/Indeed
+blijft handmatige import (`data/manual_links.json`) de fallback.
 
 Alle brede bronnen draaien door de relevantie-voorfilter, zodat alleen
 vakgebied-relevante vacatures de scoringsstap bereiken.

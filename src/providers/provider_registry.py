@@ -20,6 +20,7 @@ from providers.scrape import (
     linkedin,
     randstad,
     sitemap_source,
+    talent as talent_scraper,
     werk_nl,
     youngcapital,
 )
@@ -56,7 +57,7 @@ REGISTRY = {
     "tempo_team": sitemap_source,
     "magnet_me": sitemap_source,
     "intermediair": generic_search,
-    "talent": generic_search,
+    "talent": talent_scraper,
     "jobrapido": generic_search,
     "simplyhired": generic_search,
     "joblift": generic_search,
