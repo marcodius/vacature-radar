@@ -55,9 +55,11 @@ def _verrijk_linkedin(vacature):
     except Exception:  # noqa: BLE001
         pass
 
+# Handmatig gepinde vacatures tonen we onder dezelfde bron als de automatisch
+# gevonden vacatures (geen apart "(handmatig)"-onderscheid).
 BRON_LABEL = {
-    "linkedin_manual": "LinkedIn (handmatig)",
-    "indeed_manual": "Indeed (handmatig)",
+    "linkedin_manual": "LinkedIn",
+    "indeed_manual": "Indeed",
 }
 
 
