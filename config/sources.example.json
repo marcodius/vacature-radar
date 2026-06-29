@@ -18,16 +18,29 @@
       "type": "api",
       "country": "NL",
       "priority": 3,
-      "max_resultaten": 150,
+      "max_resultaten": 300,
       "_uitleg": "Gratis API (JOOBLE_API_KEY via Secrets). Zoekt per zoekgebied × zoekterm; levert locatie + omschrijving, dus een betrouwbare matchbron.",
       "locations": [
-        "Amsterdam", "Utrecht", "Arnhem", "Nijmegen", "Amersfoort",
-        "Ede", "Wageningen", "Veenendaal"
+        "Amsterdam",
+        "Utrecht",
+        "Arnhem",
+        "Nijmegen",
+        "Amersfoort",
+        "Ede",
+        "Wageningen",
+        "Veenendaal"
       ],
       "trefwoorden": [
-        "CRM Specialist", "Salesforce", "HubSpot", "Revenue Operations",
-        "Sales Operations", "Sales Support", "Customer Success",
-        "Business Operations", "Operations Specialist", "Projectcoördinator",
+        "CRM Specialist",
+        "Salesforce",
+        "HubSpot",
+        "Revenue Operations",
+        "Sales Operations",
+        "Sales Support",
+        "Customer Success",
+        "Business Operations",
+        "Operations Specialist",
+        "Projectcoördinator",
         "Commercieel medewerker binnendienst"
       ]
     },
@@ -36,13 +49,19 @@
       "type": "api",
       "country": "NL",
       "priority": 4,
-      "max_resultaten": 150,
+      "max_resultaten": 200,
       "results_per_page": 20,
       "distance_km": 15,
       "_uitleg": "Gratis API (ADZUNA_APP_ID/KEY via Secrets). Zoekt per zoekgebied (where + distance_km) × zoekterm; levert locatie + omschrijving.",
       "locations": [
-        "Amsterdam", "Utrecht", "Arnhem", "Nijmegen", "Amersfoort",
-        "Ede", "Wageningen", "Veenendaal"
+        "Amsterdam",
+        "Utrecht",
+        "Arnhem",
+        "Nijmegen",
+        "Amersfoort",
+        "Ede",
+        "Wageningen",
+        "Veenendaal"
       ],
       "trefwoorden": [
         "Salesforce CRM HubSpot",
@@ -103,9 +122,9 @@
       "filter_relevant": true,
       "render_js": true,
       "render_timeout_ms": 30000,
-      "relevance_scan_factor": 20,
+      "relevance_scan_factor": 30,
       "_uitleg": "Statische detailpagina's worden door Jobbird geblokkeerd (CAPTCHA/login), maar een headless browser (render_js) krijgt de volledige JSON-LD: echte locatie, bedrijf en salaris (Jobbird zet géén omschrijving in JSON-LD). detect_block_html uit (valse positief). Locatie-verrijking is de winst: zo komen Jobbird-vacatures in een zoekgebied wél door.",
-      "max_resultaten": 60,
+      "max_resultaten": 90,
       "max_sitemap_pages": 10,
       "fetch_details": true,
       "max_detail_pages": 40
@@ -116,7 +135,7 @@
       "country": "NL",
       "priority": 7,
       "query": "crm",
-      "max_pages": 5,
+      "max_pages": 8,
       "delay_seconds": 0.2,
       "respect_robots_txt": false,
       "stop_on_block": true,
@@ -147,14 +166,14 @@
         "Ede"
       ],
       "max_resultaten": 300,
-      "max_fetch_pages": 60
+      "max_fetch_pages": 100
     },
     "youngcapital": {
       "enabled": true,
       "type": "polite_scrape",
       "country": "NL",
       "priority": 8,
-      "max_pages": 5,
+      "max_pages": 8,
       "delay_seconds": 0.2,
       "respect_robots_txt": false,
       "stop_on_block": true,
@@ -181,7 +200,7 @@
         "Ede"
       ],
       "max_resultaten": 300,
-      "max_fetch_pages": 60
+      "max_fetch_pages": 100
     },
     "werk_nl_sitemap": {
       "enabled": false,
@@ -203,7 +222,6 @@
       "country": "NL",
       "priority": 2,
       "naam": "WerkenvoorNederland",
-      "country": "NL",
       "sitemap_url": "https://www.werkenvoornederland.nl/sitemap-vacatures.xml",
       "detail_bevat": "/vacature",
       "max_pages": 10,
@@ -212,10 +230,11 @@
       "stop_on_block": true,
       "filter_relevant": true,
       "_uitleg": "Gratis overheidsvacatures (WerkenvoorNederland/WerkenbijdeOverheid) zonder API-sleutel. De site publiceert sitemap-vacatures.xml. Hetzelfde aanbod als de betaalde CSO-API, maar via de sitemap. 'filter_relevant' knipt eerst op vakgebied; daarna verrijken we de relevante subset met detailpagina's.",
-      "max_resultaten": 80,
+      "max_resultaten": 100,
       "max_sitemap_pages": 10,
       "fetch_details": true,
-      "max_detail_pages": 80
+      "max_detail_pages": 100,
+      "relevance_scan_factor": 30
     },
     "werkenbijdeoverheid": {
       "enabled": true,
@@ -229,11 +248,11 @@
       "respect_robots_txt": false,
       "stop_on_block": true,
       "filter_relevant": true,
-      "max_resultaten": 60,
-      "max_sitemap_pages": 6,
-      "relevance_scan_factor": 25,
+      "max_resultaten": 100,
+      "max_sitemap_pages": 10,
+      "relevance_scan_factor": 40,
       "fetch_details": true,
-      "max_detail_pages": 60,
+      "max_detail_pages": 100,
       "_uitleg": "Bredere overheidsvacaturesite (gemeenten/provincies/waterschappen) dan WerkenvoorNederland (alleen rijksoverheid). Server-gerenderd met JSON-LD. Let op: veel overheidsvacatures vallen buiten Kevins zoekgebieden, dus de opbrengst onder de strikte locatieregel is beperkt; relevante rollen in Utrecht/Arnhem/Amsterdam komen wél door."
     },
     "gemeente_utrecht": {
@@ -333,11 +352,11 @@
       "stop_on_block": true,
       "detect_block_html": false,
       "filter_relevant": true,
-      "max_resultaten": 80,
+      "max_resultaten": 150,
       "max_sitemap_pages": 5,
-      "relevance_scan_factor": 30,
+      "relevance_scan_factor": 50,
       "fetch_details": true,
-      "max_detail_pages": 80,
+      "max_detail_pages": 150,
       "_uitleg": "Uitzendbureau met server-gerenderde detailpagina's (JSON-LD): echte locatie/bedrijf/omschrijving. Veel sales support / commercieel binnendienst / operations. detect_block_html staat uit (valse positief op 'inloggen'-tekst). Hoge scan_factor omdat de job-sitemap één grote platte lijst is."
     },
     "magnet_me": {
@@ -353,11 +372,11 @@
       "stop_on_block": true,
       "detect_block_html": false,
       "filter_relevant": true,
-      "max_resultaten": 80,
+      "max_resultaten": 140,
       "max_sitemap_pages": 3,
       "relevance_scan_factor": 30,
       "fetch_details": true,
-      "max_detail_pages": 80,
+      "max_detail_pages": 140,
       "_uitleg": "Scale-up/young-professional-platform; sluit goed aan op de gewenste tech/SaaS/scale-up-omgeving. De losse vacaturepagina's (nl-NL/vacature/) zijn server-gerenderd met JSON-LD (echte locatie/bedrijf/omschrijving); de login-wall zit alleen op de overzichtspagina. Eén grote platte sitemap, dus hoge scan_factor."
     },
     "nationale_vacaturebank_sitemap": {
@@ -366,7 +385,6 @@
       "country": "NL",
       "priority": 1,
       "naam": "Nationale Vacaturebank",
-      "country": "NL",
       "sitemap_url": "https://www.nationalevacaturebank.nl/cdn/sitemaps/vacature.xml",
       "detail_bevat": "/vacature",
       "max_pages": 10,
@@ -376,11 +394,12 @@
       "filter_relevant": true,
       "render_js": true,
       "render_timeout_ms": 30000,
-      "max_resultaten": 60,
+      "max_resultaten": 90,
       "max_sitemap_pages": 10,
       "fetch_details": true,
-      "max_detail_pages": 40,
-      "_uitleg": "NVB-detailpagina's zijn JavaScript-only; 'render_js' verrijkt de relevante subset via een headless browser (Playwright) en haalt zo echte locatie/omschrijving/salaris op. Filtert eerst op vakgebied zodat het browser-budget beperkt blijft."
+      "max_detail_pages": 90,
+      "_uitleg": "NVB-detailpagina's zijn JavaScript-only; 'render_js' verrijkt de relevante subset via een headless browser (Playwright) en haalt zo echte locatie/omschrijving/salaris op. Filtert eerst op vakgebied zodat het browser-budget beperkt blijft.",
+      "relevance_scan_factor": 25
     },
     "linkedin": {
       "enabled": true,
@@ -395,7 +414,7 @@
       "respect_robots_txt": false,
       "stop_on_block": true,
       "fetch_details": true,
-      "max_detail_pages": 50,
+      "max_detail_pages": 80,
       "detail_delay_seconds": 2.0,
       "detail_backoff_seconds": 15,
       "_uitleg": "Publieke LinkedIn guest jobs zoekresultaten + detailverrijking via de guest jobPosting-endpoint (volledige omschrijving -> hybride/salaris/inhoud). De detailendpoint 429't bij snelle bursts; daarom detail_delay_seconds ~2s + bij 429 detail_backoff_seconds backoff/retry i.p.v. stoppen, en de kansrijkste titels eerst. Op datacenter-IP (CI) blijft 429 mogelijk; dan vangen de score-vloer en de handmatige pin het op. Geen login/cookies.",
@@ -546,13 +565,13 @@
         "Amersfoort",
         "Ede"
       ],
-      "max_pages": 3,
-      "max_resultaten": 150,
+      "max_pages": 5,
+      "max_resultaten": 400,
       "delay_seconds": 0.2,
       "respect_robots_txt": false,
       "stop_on_block": true,
       "detect_block_html": false,
-      "max_fetch_pages": 40
+      "max_fetch_pages": 80
     },
     "jobrapido": {
       "enabled": true,
@@ -589,13 +608,13 @@
         "Amersfoort",
         "Ede"
       ],
-      "max_pages": 3,
-      "max_resultaten": 150,
+      "max_pages": 5,
+      "max_resultaten": 300,
       "delay_seconds": 0.2,
       "respect_robots_txt": false,
       "stop_on_block": true,
       "detect_block_html": false,
-      "max_fetch_pages": 40
+      "max_fetch_pages": 80
     },
     "simplyhired": {
       "enabled": true,
@@ -700,9 +719,17 @@
       "max_resultaten": 50,
       "geo": "netherlands",
       "post_filter_keywords": [
-        "crm", "salesforce", "hubspot", "operations", "revenue operations",
-        "sales operations", "customer success", "customer operations",
-        "business operations", "sales support", "project"
+        "crm",
+        "salesforce",
+        "hubspot",
+        "operations",
+        "revenue operations",
+        "sales operations",
+        "customer success",
+        "customer operations",
+        "business operations",
+        "sales support",
+        "project"
       ],
       "_uitleg": "Gratis remote-jobs API zonder sleutel. Internationaal remote; 'geo' en 'post_filter_keywords' beperken tot relevante (remote-)functies. Onder de strikte NL-locatieregel halen alleen functies met expliciet Nederland/Europa de site."
     },
@@ -714,27 +741,99 @@
       "max_resultaten_per_werkgever": 150,
       "_uitleg": "Losse grote werkgevers via hun ATS-API (greenhouse/recruitee/lever/smartrecruiters). 'board' is de identifier in de ATS-URL. Locatie komt uit de API, dus de strikte locatiefilter houdt de vacatures in een zoekgebied over. Werkende boards geverifieerd juni 2026; voeg gerust werkgevers toe.",
       "werkgevers": [
-        {"naam": "Channable", "platform": "recruitee", "board": "channable"},
-        {"naam": "Coolblue", "platform": "smartrecruiters", "board": "coolblue"},
-        {"naam": "Adyen", "platform": "greenhouse", "board": "adyen"},
-        {"naam": "MessageBird", "platform": "greenhouse", "board": "bird"},
-        {"naam": "Catawiki", "platform": "greenhouse", "board": "catawiki"},
-        {"naam": "bunq", "platform": "recruitee", "board": "bunq"},
-        {"naam": "Nmbrs", "platform": "recruitee", "board": "nmbrs"},
-        {"naam": "Vandebron", "platform": "recruitee", "board": "vandebron"}
+        {
+          "naam": "Channable",
+          "platform": "recruitee",
+          "board": "channable"
+        },
+        {
+          "naam": "Coolblue",
+          "platform": "smartrecruiters",
+          "board": "coolblue"
+        },
+        {
+          "naam": "Adyen",
+          "platform": "greenhouse",
+          "board": "adyen"
+        },
+        {
+          "naam": "MessageBird",
+          "platform": "greenhouse",
+          "board": "bird"
+        },
+        {
+          "naam": "Catawiki",
+          "platform": "greenhouse",
+          "board": "catawiki"
+        },
+        {
+          "naam": "bunq",
+          "platform": "recruitee",
+          "board": "bunq"
+        },
+        {
+          "naam": "Nmbrs",
+          "platform": "recruitee",
+          "board": "nmbrs"
+        },
+        {
+          "naam": "Vandebron",
+          "platform": "recruitee",
+          "board": "vandebron"
+        }
       ],
       "_watchlist_uitleg": "Gevette werkgevers met publiek ATS op goede locaties die nu (nog) weinig matchen; ze draaien dagelijks mee en verschijnen vanzelf zodra er een passende operations/support-rol opengaat. Check een nieuwe kandidaat met tools/check_werkgever.py en promoveer 'm desgewenst naar 'werkgevers'.",
       "watchlist": [
-        {"naam": "Floryn", "platform": "recruitee", "board": "floryn"},
-        {"naam": "BridgeFund", "platform": "recruitee", "board": "bridgefund"},
-        {"naam": "Crisp", "platform": "greenhouse", "board": "crisp"},
-        {"naam": "Luminis", "platform": "recruitee", "board": "luminis"},
-        {"naam": "Incentro", "platform": "recruitee", "board": "incentro"},
-        {"naam": "Bloomon", "platform": "lever", "board": "bloomon"},
-        {"naam": "Sympower", "platform": "recruitee", "board": "sympower"},
-        {"naam": "Surfly", "platform": "recruitee", "board": "surfly"},
-        {"naam": "Picnic", "platform": "smartrecruiters", "board": "picnic"},
-        {"naam": "Virtuagym", "platform": "smartrecruiters", "board": "virtuagym"}
+        {
+          "naam": "Floryn",
+          "platform": "recruitee",
+          "board": "floryn"
+        },
+        {
+          "naam": "BridgeFund",
+          "platform": "recruitee",
+          "board": "bridgefund"
+        },
+        {
+          "naam": "Crisp",
+          "platform": "greenhouse",
+          "board": "crisp"
+        },
+        {
+          "naam": "Luminis",
+          "platform": "recruitee",
+          "board": "luminis"
+        },
+        {
+          "naam": "Incentro",
+          "platform": "recruitee",
+          "board": "incentro"
+        },
+        {
+          "naam": "Bloomon",
+          "platform": "lever",
+          "board": "bloomon"
+        },
+        {
+          "naam": "Sympower",
+          "platform": "recruitee",
+          "board": "sympower"
+        },
+        {
+          "naam": "Surfly",
+          "platform": "recruitee",
+          "board": "surfly"
+        },
+        {
+          "naam": "Picnic",
+          "platform": "smartrecruiters",
+          "board": "picnic"
+        },
+        {
+          "naam": "Virtuagym",
+          "platform": "smartrecruiters",
+          "board": "virtuagym"
+        }
       ]
     },
     "rss": {
@@ -744,7 +843,10 @@
       "max_resultaten": 50,
       "_uitleg": "Generieke RSS-provider. Zet 'enabled' op true en vul echte feed-URL's in zodra je vacaturebanken met een publieke RSS-/Atom-feed hebt gevonden. Geen scraping: je gebruikt de feed die de bron zelf publiceert.",
       "feeds": [
-        {"naam": "Voorbeeldboard", "url": "https://plaats_hier_een_echte_feed.nl/vacatures/rss"}
+        {
+          "naam": "Voorbeeldboard",
+          "url": "https://plaats_hier_een_echte_feed.nl/vacatures/rss"
+        }
       ]
     }
   }
